@@ -24,5 +24,28 @@ urlpatterns = [
         ),
         name="swagger-ui",
     ),
-    path(f"{API_PREFIX}", include("apps.core.api.urls")),
+    path(
+        f"{API_PREFIX}",
+        include("apps.core.api.urls"),
+    ),
+    path(
+        f"{API_PREFIX}",
+        include("apps.keycloak_admin.usuarios.api.urls"),
+    ),
+    path(
+        f"{API_PREFIX}",
+        include("apps.keycloak_admin.clientes.api.urls"),
+    ),
+    path(
+        f"{API_PREFIX}",
+        include("apps.keycloak_admin.permissoes.api.urls"),
+    ),
+    path(
+        f"{API_PREFIX}",
+        include("apps.keycloak_admin.grupos.api.urls"),
+    ),
+    path(
+        f"{API_PREFIX}",
+        include("apps.keycloak_admin.sessoes.api.urls"),
+    ),
 ]

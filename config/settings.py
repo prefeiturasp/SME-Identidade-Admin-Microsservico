@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "apps.core",
     "apps.autenticacao",
+    "apps.keycloak_admin",
 ]
 
 MIDDLEWARE = [
@@ -95,6 +96,23 @@ SPECTACULAR_SETTINGS = {
     },
     "SECURITY": [{"ApiKeyAuth": []}],
 }
+
+# Keycloak Admin API
+# ambiente já usadas no SME-Identidade-ETL, para manter um único
+# padrão de configuração de Keycloak na plataforma.
+KEYCLOAK_URL_SERVIDOR = os.getenv(
+    "KEYCLOAK_URL_SERVIDOR", "https://localhost:8080/"
+)
+KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "COTIC")
+KEYCLOAK_USUARIO_ADMIN = os.getenv("KEYCLOAK_USUARIO_ADMIN", "admin")
+KEYCLOAK_SENHA_ADMIN = os.getenv("KEYCLOAK_SENHA_ADMIN", "admin")
+KEYCLOAK_VERIFICAR_SSL = (
+    os.getenv("KEYCLOAK_VERIFICAR_SSL", "true").lower() == "true"
+)
+KEYCLOAK_LOGIN_CLIENT_ID = os.getenv(
+    "KEYCLOAK_LOGIN_CLIENT_ID", "auto-servico-qa"
+)
+KEYCLOAK_LOGIN_CLIENT_SECRET = os.getenv("KEYCLOAK_LOGIN_CLIENT_SECRET", "")
 
 # ---------------------------------------------------------------------------
 # Logging (python-json-logger — padrão Ateliê)
