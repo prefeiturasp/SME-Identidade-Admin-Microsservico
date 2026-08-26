@@ -681,7 +681,7 @@ class UsuarioService:
             if cpf_numerico:
                 return cpf_numerico
 
-        usuario_nome: object = usuario.get("username")
+        usuario_nome = usuario.get("username")
 
         if not isinstance(usuario_nome, str):
             raise ValueError(
