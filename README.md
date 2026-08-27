@@ -4,8 +4,6 @@ O SME-Identidade-Admin-Microsservico é responsável pela administração e gest
 
 Atuando como uma camada de gerenciamento sobre a Admin API, o serviço abstrai e centraliza operações administrativas relacionadas a clients, roles, grupos e mappers, disponibilizando APIs padronizadas para os consumidores internos da plataforma.
 
-Além das operações administrativas, o microsserviço disponibiliza um portal de autosserviço por meio de uma camada bridge, permitindo a gestão controlada de recursos de identidade sem dependência direta da interface administrativa nativa do provedor de identidade.
-
 ## Estrutura do repositório
 
 ```
@@ -13,6 +11,13 @@ Além das operações administrativas, o microsserviço disponibiliza um portal 
 ├── apps/
 │   ├── core/           # cliente HTTP
 │   └── autenticacao/   # domínio autenticação: views, services, serializers
+│   └── keycloak_admin/ # administração dos recursos do Keycloak
+│       ├── api/        # componentes compartilhados da API
+│       ├── usuarios/   # administração de usuários
+│       ├── clientes/   # administração de clientes
+│       ├── permissoes/ # administração de Realm e Client Roles
+│       ├── grupos/     # administração de grupos
+│       └── sessoes/    # administração de sessões
 ├── config/             # settings, urls, wsgi
 ├── docs/               # Documentação Sphinx
 ├── requirements/
@@ -37,6 +42,16 @@ Além das operações administrativas, o microsserviço disponibiliza um portal 
 | Módulo | Responsabilidade |
 |---|---|
 | `api/autenticacao.py` | Implementa a autenticação dos endpoints por **API Key**, validando a chave enviada no cabeçalho HTTP configurado pela aplicação. |
+
+### apps/keycloak_admin
+
+| Módulo       | Responsabilidade                               |
+| ------------ | ---------------------------------------------- |
+| `usuarios`   | Consulta e gerenciamento de usuários           |
+| `clientes`   | Consulta, criação e atualização de clients     |
+| `permissoes` | Gerenciamento de Realm Roles e Client Roles    |
+| `grupos`     | Gerenciamento de grupos e associação de roles  |
+| `sessoes`    | Consulta e encerramento de sessões de usuários |
 
 ---
 
@@ -84,6 +99,13 @@ make run
 | `DJANGO_ALLOWED_HOSTS` | `*` | Hosts permitidos, separados por vírgula |
 | `API_KEY` | - | Chave de autenticação utilizada para validar o acesso às APIs protegidas pela aplicação. |
 | `API_KEY_HEADER` | `X-API-Key` | Nome do cabeçalho HTTP utilizado para enviar a chave de autenticação nas requisições. |
+| `KEYCLOAK_URL_SERVIDOR`     | —      | URL do servidor Keycloak                              |
+| `KEYCLOAK_REALM`          | —      | Realm utilizado nas operações administrativas         |
+| `KEYCLOAK_USUARIO_ADMIN` | —      | Usuário administrativo utilizado pelo serviço         |
+| `KEYCLOAK_SENHA_ADMIN` | —      | Senha do usuário administrativo                       |
+| `KEYCLOAK_VERIFICAR_SSL`     | —      | Define se o certificado SSL do Keycloak será validado |
+| `KEYCLOAK_LOGIN_CLIENT_ID` | — | Identificador do client utilizado para autenticação no Keycloak. |
+| `KEYCLOAK_LOGIN_CLIENT_SECRET` | — | Credencial secreta do client utilizado para autenticação no Keycloak. |
 
 ## Atalhos Make
 
