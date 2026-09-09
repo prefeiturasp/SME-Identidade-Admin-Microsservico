@@ -1,5 +1,6 @@
 """Testes do serviço de administração de sessões."""
 
+from ipaddress import IPv4Address
 from unittest.mock import Mock, patch
 
 from apps.keycloak_admin.sessoes.services import SessaoService
@@ -31,6 +32,7 @@ class TestSessaoService:
 
     def test_consultar_retorna_sessoes_normalizadas(self) -> None:
         """Deve consultar e normalizar as sessões do usuário."""
+        endereco_ip = str(IPv4Address(0xC0000201))
         sessoes = [
             {
                 "id": "sessao-1",
@@ -40,7 +42,7 @@ class TestSessaoService:
                     "client-1": "Sistema 1",
                     "client-2": "Sistema 2",
                 },
-                "ipAddress": "192.168.0.10",
+                "ipAddress": endereco_ip,
                 "start": 1000,
                 "lastAccess": 2000,
             },
@@ -51,7 +53,7 @@ class TestSessaoService:
                 "clients": {
                     "client-3": "Sistema 3",
                 },
-                "ipAddress": "192.168.0.20",
+                "ipAddress": endereco_ip,
                 "start": 3000,
                 "lastAccess": 4000,
             },
@@ -72,7 +74,7 @@ class TestSessaoService:
                     "client-1": "Sistema 1",
                     "client-2": "Sistema 2",
                 },
-                "endereco_ip": "192.168.0.10",
+                "endereco_ip": endereco_ip,
                 "inicio": 1000,
                 "ultimo_acesso": 2000,
             },
@@ -83,7 +85,7 @@ class TestSessaoService:
                 "clientes": {
                     "client-3": "Sistema 3",
                 },
-                "endereco_ip": "192.168.0.20",
+                "endereco_ip": endereco_ip,
                 "inicio": 3000,
                 "ultimo_acesso": 4000,
             },
@@ -146,6 +148,7 @@ class TestSessaoService:
 
     def test_normalizar_sessao(self) -> None:
         """Deve normalizar corretamente os dados de uma sessão."""
+        endereco_ip = str(IPv4Address(0xC0000201))
         sessao = {
             "id": "sessao-1",
             "userId": "usuario-1",
@@ -153,7 +156,7 @@ class TestSessaoService:
             "clients": {
                 "client-1": "Sistema 1",
             },
-            "ipAddress": "10.0.0.1",
+            "ipAddress": endereco_ip,
             "start": 100,
             "lastAccess": 200,
         }
@@ -167,7 +170,7 @@ class TestSessaoService:
             "clientes": {
                 "client-1": "Sistema 1",
             },
-            "endereco_ip": "10.0.0.1",
+            "endereco_ip": endereco_ip,
             "inicio": 100,
             "ultimo_acesso": 200,
         }

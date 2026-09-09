@@ -304,7 +304,7 @@ class RoleService:
         """
         if tipo not in cls.TIPOS_VALIDOS:
             raise ValueError(
-                "Tipo de permissão inválido. " "Utilize 'realm' ou 'client'."
+                "Tipo de permissão inválido. Utilize 'realm' ou 'client'."
             )
 
         if tipo == "client" and not client_uuid:

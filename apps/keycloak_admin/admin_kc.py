@@ -1,7 +1,7 @@
 """Serviço base para administração do Keycloak."""
 
 from collections.abc import Callable
-from typing import NoReturn, ParamSpec, TypeVar
+from typing import NoReturn
 
 from django.conf import settings
 from keycloak import KeycloakAdmin
@@ -20,9 +20,6 @@ from apps.keycloak_admin.exceptions import (
     RecursoJaExisteError,
     RecursoNaoEncontradoError,
 )
-
-P = ParamSpec("P")
-T = TypeVar("T")
 
 
 class KeycloakAdminService:
@@ -65,12 +62,9 @@ class KeycloakAdminService:
             verify=settings.KEYCLOAK_VERIFICAR_SSL,
         )
 
-    def executar(
-        self,
-        operacao: Callable[P, T],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> T:
+    def executar[
+        **P, T
+    ](self, operacao: Callable[P, T], *args: P.args, **kwargs: P.kwargs,) -> T:
         """Executa uma operação administrativa do Keycloak.
 
         Este método centraliza a execução das operações realizadas por

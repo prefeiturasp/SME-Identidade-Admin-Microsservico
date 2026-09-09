@@ -1,5 +1,6 @@
 """Testes dos serviços administrativos de usuários."""
 
+from secrets import token_urlsafe
 from unittest.mock import Mock
 
 from django.test import SimpleTestCase
@@ -424,17 +425,18 @@ class UsuarioServiceTestCase(SimpleTestCase):
     def test_alterar_senha(self) -> None:
         """Deve alterar a senha com a configuração de temporariedade."""
         self.admin.executar.return_value = None
+        senha_teste = token_urlsafe(16)
 
         self.service.alterar_senha(
             usuario_id="usuario-id",
-            senha="SenhaSegura123",
+            senha=senha_teste,
             senha_temporaria=True,
         )
 
         self.admin.executar.assert_called_once_with(
             self.admin.cliente.set_user_password,
             user_id="usuario-id",
-            password="SenhaSegura123",
+            password=senha_teste,
             temporary=True,
         )
 
