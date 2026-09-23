@@ -205,6 +205,43 @@ class ClientService:
             payload=payload,
         )
 
+    def rotacionar_secret(
+        self,
+        client_uuid: str,
+    ) -> str:
+        """Rotaciona a secret de um client no Keycloak.
+
+        Solicita ao Keycloak a geração de uma nova secret para o client
+        informado.
+
+        Args:
+            client_uuid: ID interno do client no Keycloak.
+
+        Returns:
+            Nova secret gerada para o client.
+
+        Raises:
+            RuntimeError: Caso o Keycloak não retorne a nova secret.
+        """
+        logger.info(
+            "Rotacionando secret do client no Keycloak.",
+            extra={"client_uuid": client_uuid},
+        )
+
+        credential = self.admin.executar(
+            self.admin.cliente.generate_client_secrets,
+            client_id=client_uuid,
+        )
+
+        secret = credential.get("value")
+
+        if not isinstance(secret, str) or not secret:
+            raise RuntimeError(
+                "O Keycloak não retornou a nova secret do client."
+            )
+
+        return secret
+
     @staticmethod
     def _normalizar_client(
         client: dict[str, Any],
