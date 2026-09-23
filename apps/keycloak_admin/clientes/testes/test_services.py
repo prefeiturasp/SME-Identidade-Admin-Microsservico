@@ -319,3 +319,40 @@ class ClientServiceTest(SimpleTestCase):
                 },
             },
         )
+
+    def test_rotacionar_secret(self) -> None:
+        """Deve rotacionar a secret do client e retornar o novo valor."""
+        self.admin.executar.return_value = {
+            "value": "nova-secret",
+        }
+
+        resultado = self.service.rotacionar_secret(
+            client_uuid="client-uuid",
+        )
+
+        self.assertEqual(
+            resultado,
+            "nova-secret",
+        )
+
+        self.admin.executar.assert_called_once_with(
+            self.admin.cliente.generate_client_secrets,
+            client_id="client-uuid",
+        )
+
+    def test_rotacionar_secret_sem_valor_retornado(self) -> None:
+        """Deve gerar erro quando o Keycloak não retornar a secret."""
+        self.admin.executar.return_value = {}
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "O Keycloak não retornou a nova secret do client.",
+        ):
+            self.service.rotacionar_secret(
+                client_uuid="client-uuid",
+            )
+
+        self.admin.executar.assert_called_once_with(
+            self.admin.cliente.generate_client_secrets,
+            client_id="client-uuid",
+        )
