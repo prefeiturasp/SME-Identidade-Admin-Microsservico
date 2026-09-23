@@ -64,6 +64,7 @@ registrados no Keycloak.
 | GET    | `/identidade-admin/api/v1/clientes/`               | Consulta clients.   |
 | POST   | `/identidade-admin/api/v1/clientes/`               | Cria um client.     |
 | PATCH  | `/identidade-admin/api/v1/clientes/{client_uuid}/` | Atualiza um client. |
+| POST   | `/identidade-admin/api/v1/clientes/{client_uuid}/secret/rotacionar` | Rotaciona secret do client. |
 
 ---
 
