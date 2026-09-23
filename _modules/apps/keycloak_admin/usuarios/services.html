@@ -1,0 +1,834 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="pt-BR" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>apps.keycloak_admin.usuarios.services &mdash; SME-Identidade-Admin-Microsservico</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=2346ddef"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/translations.js?v=71a39b36"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../../../genindex.html" />
+    <link rel="search" title="Buscar" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            SME-Identidade-Admin-Microsservico
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Pesquisar documentos" aria-label="Pesquisar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Menu de navegação">
+              <p class="caption" role="heading"><span class="caption-text">Conteúdo</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arquitetura/visao_geral.html">Visão geral da arquitetura</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arquitetura/fluxo_keycloak_admin.html">Fluxo de integração com o Keycloak</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../controle/index.html">Controle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Referência de código</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Menu de navegação móvel" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">SME-Identidade-Admin-Microsservico</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Navegação da página">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Código do módulo</a></li>
+      <li class="breadcrumb-item active">apps.keycloak_admin.usuarios.services</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código-fonte para apps.keycloak_admin.usuarios.services</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Serviço de administração de usuários no Keycloak."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.conf</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">apps.keycloak_admin.admin_kc</span><span class="w"> </span><span class="kn">import</span> <span class="n">KeycloakAdminService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">apps.keycloak_admin.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ErroComunicacaoKeycloakError</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="UsuarioService">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioService</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Centraliza as operações administrativas de usuários no Keycloak."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">admin</span><span class="p">:</span> <span class="n">KeycloakAdminService</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Inicializa o serviço de administração de usuários.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            admin: Serviço responsável pela comunicação com o Keycloak.</span>
+<span class="sd">                Quando não informado, uma nova instância é criada.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span> <span class="o">=</span> <span class="n">admin</span> <span class="ow">or</span> <span class="n">KeycloakAdminService</span><span class="p">()</span>
+
+<div class="viewcode-block" id="UsuarioService.criar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.criar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">criar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">email</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">cpf</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">rf</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">sobrenome</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Cria um usuário no Keycloak.</span>
+
+<span class="sd">        O usuário é criado habilitado e recebe uma senha inicial temporária.</span>
+<span class="sd">        A senha é determinada a partir do registro funcional, CPF ou nome</span>
+<span class="sd">        de usuário, conforme a regra definida em</span>
+<span class="sd">        ``_resolver_senha_inicial()``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario: Nome de identificação do usuário.</span>
+<span class="sd">            nome: Nome do usuário.</span>
+<span class="sd">            email: Endereço de e-mail do usuário.</span>
+<span class="sd">            cpf: CPF do usuário.</span>
+<span class="sd">            rf: Registro funcional do usuário.</span>
+<span class="sd">            sobrenome: Sobrenome do usuário.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ID do usuário criado no Keycloak.</span>
+<span class="sd">        """</span>
+        <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"username"</span><span class="p">:</span> <span class="n">usuario</span><span class="p">,</span>
+            <span class="s2">"firstName"</span><span class="p">:</span> <span class="n">nome</span><span class="p">,</span>
+            <span class="s2">"lastName"</span><span class="p">:</span> <span class="n">sobrenome</span><span class="p">,</span>
+            <span class="s2">"email"</span><span class="p">:</span> <span class="n">email</span><span class="p">,</span>
+            <span class="s2">"enabled"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"cpf"</span><span class="p">:</span> <span class="p">[</span><span class="n">cpf</span><span class="p">],</span>
+                <span class="s2">"rf"</span><span class="p">:</span> <span class="p">[</span><span class="n">rf</span><span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+        <span class="n">senha_inicial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_senha_inicial</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+        <span class="n">payload</span><span class="p">[</span><span class="s2">"credentials"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"password"</span><span class="p">,</span>
+                <span class="s2">"value"</span><span class="p">:</span> <span class="n">senha_inicial</span><span class="p">,</span>
+                <span class="s2">"temporary"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Criando usuário no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"usuario"</span><span class="p">:</span> <span class="n">usuario</span><span class="p">,</span>
+                <span class="s2">"rf"</span><span class="p">:</span> <span class="n">rf</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">create_user</span><span class="p">,</span>
+            <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UsuarioService.consultar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.consultar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">consultar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cpf</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">rf</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">email</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">busca</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">limite</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Consulta usuários do realm.</span>
+
+<span class="sd">        Os critérios de identificação são mutuamente exclusivos.</span>
+<span class="sd">        Quando nenhum critério específico é informado, a consulta</span>
+<span class="sd">        retorna os usuários encontrados pela busca geral.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID do usuário no Keycloak.</span>
+<span class="sd">            cpf: CPF do usuário.</span>
+<span class="sd">            rf: Registro funcional do usuário.</span>
+<span class="sd">            email: Endereço de e-mail do usuário.</span>
+<span class="sd">            busca: Texto utilizado para pesquisa geral.</span>
+<span class="sd">            limite: Quantidade máxima de usuários retornados.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Lista de usuários normalizados.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: Quando mais de um critério de identificação</span>
+<span class="sd">                é informado.</span>
+<span class="sd">        """</span>
+        <span class="n">criterios</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">,</span>
+            <span class="s2">"cpf"</span><span class="p">:</span> <span class="n">cpf</span><span class="p">,</span>
+            <span class="s2">"rf"</span><span class="p">:</span> <span class="n">rf</span><span class="p">,</span>
+            <span class="s2">"email"</span><span class="p">:</span> <span class="n">email</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">informados</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">nome</span> <span class="k">for</span> <span class="n">nome</span><span class="p">,</span> <span class="n">valor</span> <span class="ow">in</span> <span class="n">criterios</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">valor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">informados</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Informe apenas um critério de identificação: "</span>
+                <span class="s2">"usuario_id, cpf, rf ou email."</span>
+            <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Consultando usuários no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"criterio"</span><span class="p">:</span> <span class="n">informados</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">informados</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">"limite"</span><span class="p">:</span> <span class="n">limite</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">usuario_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_obter_por_id</span><span class="p">(</span><span class="n">usuario_id</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="n">cpf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">usuarios</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buscar_por_atributo</span><span class="p">(</span>
+                <span class="n">nome</span><span class="o">=</span><span class="s2">"cpf"</span><span class="p">,</span>
+                <span class="n">valor</span><span class="o">=</span><span class="n">cpf</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">rf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">usuarios</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buscar_por_atributo</span><span class="p">(</span>
+                <span class="n">nome</span><span class="o">=</span><span class="s2">"rf"</span><span class="p">,</span>
+                <span class="n">valor</span><span class="o">=</span><span class="n">rf</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">email</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">usuarios</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buscar_por_email</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parametros</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"max"</span><span class="p">:</span> <span class="n">limite</span><span class="p">,</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="n">busca</span><span class="p">:</span>
+                <span class="n">parametros</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">busca</span>
+
+            <span class="n">usuarios</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_users</span><span class="p">,</span>
+                <span class="n">query</span><span class="o">=</span><span class="n">parametros</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizar_usuario</span><span class="p">(</span><span class="n">usuario</span><span class="p">)</span> <span class="k">for</span> <span class="n">usuario</span> <span class="ow">in</span> <span class="n">usuarios</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="UsuarioService.atualizar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.atualizar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">atualizar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">usuario</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sobrenome</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cpf</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">rf</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">habilitado</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Atualiza os dados cadastrais de um usuário.</span>
+
+<span class="sd">        O endereço de e-mail não é alterado por este método. A alteração</span>
+<span class="sd">        de e-mail possui fluxo próprio através de ``alterar_email()``.</span>
+
+<span class="sd">        Apenas os campos informados são alterados.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID do usuário no Keycloak.</span>
+<span class="sd">            usuario: Novo nome de identificação.</span>
+<span class="sd">            nome: Novo nome.</span>
+<span class="sd">            sobrenome: Novo sobrenome.</span>
+<span class="sd">            cpf: Novo CPF.</span>
+<span class="sd">            rf: Novo registro funcional.</span>
+<span class="sd">            habilitado: Define se o usuário deve permanecer habilitado.</span>
+<span class="sd">        """</span>
+        <span class="n">usuario_atual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_user</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">atributos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">usuario_atual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attributes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{},</span>
+        <span class="p">)</span>
+
+        <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"username"</span><span class="p">:</span> <span class="n">usuario_atual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"username"</span><span class="p">),</span>
+            <span class="s2">"firstName"</span><span class="p">:</span> <span class="n">usuario_atual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"firstName"</span><span class="p">),</span>
+            <span class="s2">"lastName"</span><span class="p">:</span> <span class="n">usuario_atual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lastName"</span><span class="p">),</span>
+            <span class="s2">"email"</span><span class="p">:</span> <span class="n">usuario_atual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"email"</span><span class="p">),</span>
+            <span class="s2">"enabled"</span><span class="p">:</span> <span class="n">usuario_atual</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="s2">"attributes"</span><span class="p">:</span> <span class="n">atributos</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">usuario</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"username"</span><span class="p">]</span> <span class="o">=</span> <span class="n">usuario</span>
+
+        <span class="k">if</span> <span class="n">nome</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"firstName"</span><span class="p">]</span> <span class="o">=</span> <span class="n">nome</span>
+
+        <span class="k">if</span> <span class="n">sobrenome</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"lastName"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sobrenome</span>
+
+        <span class="k">if</span> <span class="n">cpf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">atributos</span><span class="p">[</span><span class="s2">"cpf"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">cpf</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">rf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">atributos</span><span class="p">[</span><span class="s2">"rf"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rf</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">habilitado</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"enabled"</span><span class="p">]</span> <span class="o">=</span> <span class="n">habilitado</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Atualizando usuário no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">update_user</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+            <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UsuarioService.alterar_email">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.alterar_email">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">alterar_email</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">email</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Altera o e-mail e solicita sua verificação.</span>
+
+<span class="sd">        A alteração do e-mail e o envio da verificação são operações</span>
+<span class="sd">        independentes no Keycloak. Uma falha no envio da verificação</span>
+<span class="sd">        não impede que o novo e-mail permaneça configurado.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID do usuário no Keycloak.</span>
+<span class="sd">            email: Novo endereço de e-mail.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Resultado da alteração e da solicitação de verificação.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Alterando e-mail do usuário no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">update_user</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+            <span class="n">payload</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"email"</span><span class="p">:</span> <span class="n">email</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">send_verify_email</span><span class="p">,</span>
+                <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+                <span class="n">client_id</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">KEYCLOAK_LOGIN_CLIENT_ID</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">ErroComunicacaoKeycloakError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+                <span class="s2">"Falha ao enviar verificação de e-mail."</span><span class="p">,</span>
+                <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">},</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">"email_alterado"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">"verificacao_enviada"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"email_alterado"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"verificacao_enviada"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="UsuarioService.alterar_senha">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.alterar_senha">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">alterar_senha</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">senha</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">senha_temporaria</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Altera a senha de um usuário.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID do usuário no Keycloak.</span>
+<span class="sd">            senha: Nova senha do usuário.</span>
+<span class="sd">            senha_temporaria: Indica se a senha deve ser alterada</span>
+<span class="sd">                no próximo acesso.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Alterando senha do usuário no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">,</span>
+                <span class="s2">"senha_temporaria"</span><span class="p">:</span> <span class="n">senha_temporaria</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">set_user_password</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+            <span class="n">password</span><span class="o">=</span><span class="n">senha</span><span class="p">,</span>
+            <span class="n">temporary</span><span class="o">=</span><span class="n">senha_temporaria</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UsuarioService.associar_grupo">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.associar_grupo">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">associar_grupo</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">grupo_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Associa um usuário a um grupo.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID interno do usuário no Keycloak.</span>
+<span class="sd">            grupo_id: ID interno do grupo no Keycloak.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Associando usuário ao grupo no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">,</span>
+                <span class="s2">"grupo_id"</span><span class="p">:</span> <span class="n">grupo_id</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">group_user_add</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+            <span class="n">group_id</span><span class="o">=</span><span class="n">grupo_id</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UsuarioService.desassociar_grupo">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.desassociar_grupo">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">desassociar_grupo</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">grupo_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Desassocia um usuário de um grupo.</span>
+
+<span class="sd">        A operação remove somente o vínculo entre o usuário e o grupo,</span>
+<span class="sd">        mantendo ambos os recursos existentes no Keycloak.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID interno do usuário no Keycloak.</span>
+<span class="sd">            grupo_id: ID interno do grupo no Keycloak.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Removendo usuário do grupo no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">,</span>
+                <span class="s2">"grupo_id"</span><span class="p">:</span> <span class="n">grupo_id</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">group_user_remove</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+            <span class="n">group_id</span><span class="o">=</span><span class="n">grupo_id</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UsuarioService.associar_role_realm">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.associar_role_realm">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">associar_role_realm</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nome_permissao</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Associa uma Realm Role a um usuário.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID interno do usuário no Keycloak.</span>
+<span class="sd">            nome_permissao: Nome da Realm Role.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Associando Realm Role ao usuário no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">,</span>
+                <span class="s2">"nome_role"</span><span class="p">:</span> <span class="n">nome_permissao</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="n">role</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_realm_role</span><span class="p">,</span>
+            <span class="n">role_name</span><span class="o">=</span><span class="n">nome_permissao</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">assign_realm_roles</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+            <span class="n">roles</span><span class="o">=</span><span class="p">[</span><span class="n">role</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UsuarioService.desassociar_role_realm">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.desassociar_role_realm">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">desassociar_role_realm</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nome_permissao</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Desassocia uma Realm Role de um usuário.</span>
+
+<span class="sd">        A operação remove somente o vínculo da role com o usuário.</span>
+<span class="sd">        A Realm Role permanece existente no Keycloak.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID interno do usuário no Keycloak.</span>
+<span class="sd">            nome_permissao: Nome da Realm Role que será removida.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Removendo Realm Role do usuário."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">,</span>
+                <span class="s2">"nome_permissao"</span><span class="p">:</span> <span class="n">nome_permissao</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="n">role</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_realm_role</span><span class="p">,</span>
+            <span class="n">role_name</span><span class="o">=</span><span class="n">nome_permissao</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">delete_realm_roles_of_user</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+            <span class="n">roles</span><span class="o">=</span><span class="p">[</span><span class="n">role</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UsuarioService.associar_role_client">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.associar_role_client">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">associar_role_client</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">client_uuid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nome_permissao</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Associa uma Client Role a um usuário.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID interno do usuário no Keycloak.</span>
+<span class="sd">            client_uuid: ID interno do cliente no Keycloak.</span>
+<span class="sd">            nome_permissao: Nome da Client Role.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Associando Client Role ao usuário no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">,</span>
+                <span class="s2">"client_uuid"</span><span class="p">:</span> <span class="n">client_uuid</span><span class="p">,</span>
+                <span class="s2">"nome_role"</span><span class="p">:</span> <span class="n">nome_permissao</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="n">role</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_client_role</span><span class="p">,</span>
+            <span class="n">client_id</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+            <span class="n">role_name</span><span class="o">=</span><span class="n">nome_permissao</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">assign_client_role</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+            <span class="n">client_id</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+            <span class="n">roles</span><span class="o">=</span><span class="p">[</span><span class="n">role</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UsuarioService.desassociar_role_client">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.usuarios.services.UsuarioService.desassociar_role_client">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">desassociar_role_client</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">client_uuid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nome_permissao</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Desassocia uma Client Role de um usuário.</span>
+
+<span class="sd">        A operação remove somente o vínculo da role com o usuário.</span>
+<span class="sd">        O client e a Client Role permanecem existentes no Keycloak.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID interno do usuário no Keycloak.</span>
+<span class="sd">            client_uuid: ID interno do cliente no Keycloak.</span>
+<span class="sd">            nome_permissao: Nome da Client Role que será removida.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Removendo Client Role do usuário no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">,</span>
+                <span class="s2">"client_uuid"</span><span class="p">:</span> <span class="n">client_uuid</span><span class="p">,</span>
+                <span class="s2">"nome_permissao"</span><span class="p">:</span> <span class="n">nome_permissao</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="n">role</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_client_role</span><span class="p">,</span>
+            <span class="n">client_id</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+            <span class="n">role_name</span><span class="o">=</span><span class="n">nome_permissao</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">delete_client_roles_of_user</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+            <span class="n">client_id</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+            <span class="n">roles</span><span class="o">=</span><span class="p">[</span><span class="n">role</span><span class="p">],</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_obter_por_id</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Obtém e normaliza um usuário pelo ID interno do Keycloak.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID do usuário no Keycloak.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dados do usuário normalizados.</span>
+<span class="sd">        """</span>
+        <span class="n">usuario</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_user</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalizar_usuario</span><span class="p">(</span><span class="n">usuario</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_buscar_por_atributo</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">valor</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Busca usuários por um atributo personalizado.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            nome: Nome do atributo no Keycloak.</span>
+<span class="sd">            valor: Valor utilizado na pesquisa.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Lista de usuários encontrados.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_users</span><span class="p">,</span>
+            <span class="n">query</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"q"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">nome</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">valor</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_buscar_por_email</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">email</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Busca usuários pelo endereço de e-mail exato.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            email: Endereço utilizado na pesquisa.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Lista de usuários associados ao e-mail informado.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_users</span><span class="p">,</span>
+            <span class="n">query</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"email"</span><span class="p">:</span> <span class="n">email</span><span class="p">,</span>
+                <span class="s2">"exact"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalizar_usuario</span><span class="p">(</span>
+        <span class="n">usuario</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Normaliza os dados do usuário para o contrato interno.</span>
+
+<span class="sd">        Os atributos personalizados ``cpf`` e ``rf`` são extraídos dos</span>
+<span class="sd">        atributos do Keycloak e disponibilizados diretamente no retorno.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario: Dados do usuário retornados pelo Keycloak.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dados do usuário normalizados.</span>
+<span class="sd">        """</span>
+        <span class="n">atributos</span> <span class="o">=</span> <span class="n">usuario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attributes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="n">usuario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span>
+            <span class="s2">"username"</span><span class="p">:</span> <span class="n">usuario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"username"</span><span class="p">),</span>
+            <span class="s2">"firstName"</span><span class="p">:</span> <span class="n">usuario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"firstName"</span><span class="p">),</span>
+            <span class="s2">"lastName"</span><span class="p">:</span> <span class="n">usuario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lastName"</span><span class="p">),</span>
+            <span class="s2">"email"</span><span class="p">:</span> <span class="n">usuario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"email"</span><span class="p">),</span>
+            <span class="s2">"enabled"</span><span class="p">:</span> <span class="n">usuario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="s2">"emailVerified"</span><span class="p">:</span> <span class="n">usuario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"emailVerified"</span><span class="p">,</span>
+                <span class="kc">False</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s2">"cpf"</span><span class="p">:</span> <span class="n">UsuarioService</span><span class="o">.</span><span class="n">_obter_atributo</span><span class="p">(</span>
+                <span class="n">atributos</span><span class="p">,</span>
+                <span class="s2">"cpf"</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s2">"rf"</span><span class="p">:</span> <span class="n">UsuarioService</span><span class="o">.</span><span class="n">_obter_atributo</span><span class="p">(</span>
+                <span class="n">atributos</span><span class="p">,</span>
+                <span class="s2">"rf"</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_obter_atributo</span><span class="p">(</span>
+        <span class="n">atributos</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Obtém o primeiro valor textual de um atributo do Keycloak.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            atributos: Atributos retornados pelo Keycloak.</span>
+<span class="sd">            nome: Nome do atributo que será consultado.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Primeiro valor textual encontrado ou ``None`` quando o</span>
+<span class="sd">            atributo não existe, está vazio ou não possui valor textual.</span>
+<span class="sd">        """</span>
+        <span class="n">valores</span> <span class="o">=</span> <span class="n">atributos</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">nome</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">valores</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">valores</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">valor</span> <span class="o">=</span> <span class="n">valores</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">valor</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">valor</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolver_senha_inicial</span><span class="p">(</span>
+        <span class="n">usuario</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Resolve a senha inicial temporária do usuário.</span>
+
+<span class="sd">        A senha segue a ordem de prioridade: registro funcional,</span>
+<span class="sd">        CPF contendo somente dígitos e, por último, nome de usuário.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario: Dados do usuário utilizados para determinar a</span>
+<span class="sd">                senha inicial.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Valor utilizado como senha inicial.</span>
+<span class="sd">        """</span>
+        <span class="n">atributos</span> <span class="o">=</span> <span class="n">usuario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attributes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+
+        <span class="n">rf</span> <span class="o">=</span> <span class="n">UsuarioService</span><span class="o">.</span><span class="n">_obter_atributo</span><span class="p">(</span>
+            <span class="n">atributos</span><span class="p">,</span>
+            <span class="s2">"rf"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rf</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rf</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="n">cpf</span> <span class="o">=</span> <span class="n">UsuarioService</span><span class="o">.</span><span class="n">_obter_atributo</span><span class="p">(</span>
+            <span class="n">atributos</span><span class="p">,</span>
+            <span class="s2">"cpf"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cpf</span><span class="p">:</span>
+            <span class="n">cpf_numerico</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">caractere</span> <span class="k">for</span> <span class="n">caractere</span> <span class="ow">in</span> <span class="n">cpf</span> <span class="k">if</span> <span class="n">caractere</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">cpf_numerico</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cpf_numerico</span>
+
+        <span class="n">usuario_nome</span> <span class="o">=</span> <span class="n">usuario</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"username"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">usuario_nome</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"O nome de usuário é obrigatório para definir "</span>
+                <span class="s2">"a senha inicial."</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">usuario_nome</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Direitos autorais .</p>
+  </div>
+
+  Compilado com <a href="https://www.sphinx-doc.org/">Sphinx</a> usando um
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    fornecido por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

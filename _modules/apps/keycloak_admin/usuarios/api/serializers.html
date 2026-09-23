@@ -1,0 +1,397 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="pt-BR" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>apps.keycloak_admin.usuarios.api.serializers &mdash; SME-Identidade-Admin-Microsservico</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=2346ddef"></script>
+      <script src="../../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../_static/translations.js?v=71a39b36"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../../../../genindex.html" />
+    <link rel="search" title="Buscar" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            SME-Identidade-Admin-Microsservico
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Pesquisar documentos" aria-label="Pesquisar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Menu de navegação">
+              <p class="caption" role="heading"><span class="caption-text">Conteúdo</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arquitetura/visao_geral.html">Visão geral da arquitetura</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arquitetura/fluxo_keycloak_admin.html">Fluxo de integração com o Keycloak</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../controle/index.html">Controle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../api.html">Referência de código</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Menu de navegação móvel" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">SME-Identidade-Admin-Microsservico</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Navegação da página">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Código do módulo</a></li>
+      <li class="breadcrumb-item active">apps.keycloak_admin.usuarios.api.serializers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código-fonte para apps.keycloak_admin.usuarios.api.serializers</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Serializers da API administrativa de usuários."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">serializers</span>
+
+
+<div class="viewcode-block" id="UsuarioCriarSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioCriarSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioCriarSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Valida os dados necessários para criação de um usuário."""</span>
+
+    <span class="n">usuario</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Nome de identificação do usuário no Keycloak."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">nome</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Nome do usuário."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">sobrenome</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">allow_blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Sobrenome do usuário."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">EmailField</span><span class="p">(</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Endereço de e-mail do usuário."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">cpf</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"CPF do usuário."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">rf</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Registro funcional do usuário."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="UsuarioConsultaSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioConsultaSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioConsultaSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Valida os parâmetros utilizados na consulta de usuários."""</span>
+
+    <span class="n">usuario_id</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"ID interno do usuário no Keycloak. "</span>
+            <span class="s2">"Não pode ser utilizado junto com cpf, rf ou email."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">cpf</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"CPF do usuário. "</span>
+            <span class="s2">"Não pode ser utilizado junto com usuario_id, rf ou email."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">rf</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Registro funcional do usuário. "</span>
+            <span class="s2">"Não pode ser utilizado junto com usuario_id, cpf ou email."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">email</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">EmailField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Endereço de e-mail exato do usuário. "</span>
+            <span class="s2">"Não pode ser utilizado junto com usuario_id, cpf ou rf."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">busca</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Texto utilizado para pesquisa geral de usuários. "</span>
+            <span class="s2">"Não pode ser utilizado junto com um identificador específico."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">limite</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">min_value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">max_value</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Quantidade máxima de usuários retornados. "</span> <span class="s2">"Valor padrão: 100."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="UsuarioConsultaSerializer.validate">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioConsultaSerializer.validate">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Valida as combinações permitidas dos parâmetros de consulta.</span>
+
+<span class="sd">        Apenas um identificador específico pode ser informado por consulta.</span>
+<span class="sd">        O parâmetro ``busca`` também é exclusivo e não pode ser combinado</span>
+<span class="sd">        com um identificador específico.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            attrs: Dados recebidos após a validação individual dos campos.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dados validados e aceitos pelo serializer.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            serializers.ValidationError: Quando mais de um identificador</span>
+<span class="sd">                é informado ou quando ``busca`` é combinado com um</span>
+<span class="sd">                identificador específico.</span>
+<span class="sd">        """</span>
+        <span class="n">criterios</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"usuario_id"</span><span class="p">,</span>
+            <span class="s2">"cpf"</span><span class="p">,</span>
+            <span class="s2">"rf"</span><span class="p">,</span>
+            <span class="s2">"email"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">identificadores</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">criterio</span>
+            <span class="k">for</span> <span class="n">criterio</span> <span class="ow">in</span> <span class="n">criterios</span>
+            <span class="k">if</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">criterio</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">identificadores</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">serializers</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">"consulta"</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="s2">"Informe apenas um dos seguintes parâmetros: "</span>
+                        <span class="s2">"usuario_id, cpf, rf ou email."</span>
+                    <span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"busca"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">identificadores</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">serializers</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">"busca"</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="s2">"O parâmetro busca não pode ser utilizado "</span>
+                        <span class="s2">"junto com um identificador específico."</span>
+                    <span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">attrs</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="UsuarioAtualizarSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioAtualizarSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioAtualizarSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Valida os dados opcionais para atualização de um usuário."""</span>
+
+    <span class="n">usuario</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Novo nome de identificação do usuário."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">nome</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Novo nome do usuário."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">sobrenome</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">allow_blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Novo sobrenome do usuário."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">cpf</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Novo CPF do usuário."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">rf</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Novo registro funcional do usuário."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">habilitado</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Define se o usuário permanecerá habilitado no Keycloak."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="UsuarioAlterarEmailSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioAlterarEmailSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioAlterarEmailSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Valida o novo endereço de e-mail de um usuário."""</span>
+
+    <span class="n">email</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">EmailField</span><span class="p">(</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Novo endereço de e-mail do usuário."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="UsuarioAlterarSenhaSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioAlterarSenhaSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioAlterarSenhaSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Valida a nova senha de um usuário."""</span>
+
+    <span class="n">senha</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">write_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Nova senha do usuário (transporte HTTPS)."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="UsuarioSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Representa os dados de um usuário retornados pela API."""</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">()</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">allow_null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">firstName</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">allow_null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">lastName</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">allow_null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">EmailField</span><span class="p">(</span><span class="n">allow_null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">enabled</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">()</span>
+    <span class="n">emailVerified</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">()</span>
+    <span class="n">cpf</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">allow_null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">rf</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">allow_null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="UsuarioCriadoSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioCriadoSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioCriadoSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Representa a resposta retornada após a criação de um usuário."""</span>
+
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="UsuarioEmailSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioEmailSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioEmailSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Representa o resultado da alteração e verificação do e-mail."""</span>
+
+    <span class="n">email_alterado</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">()</span>
+    <span class="n">verificacao_enviada</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="UsuarioGrupoSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioGrupoSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioGrupoSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Valida os dados para associação de um usuário a um grupo."""</span>
+
+    <span class="n">grupo_id</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"ID interno do grupo no Keycloak."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="UsuarioRealmRoleSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioRealmRoleSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioRealmRoleSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Valida os dados para associação de uma Realm Role a um usuário."""</span>
+
+    <span class="n">nome_permissao</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Nome da Realm Role no Keycloak."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="UsuarioClientRoleSerializer">
+<a class="viewcode-back" href="../../../../../api.html#apps.keycloak_admin.usuarios.api.serializers.UsuarioClientRoleSerializer">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UsuarioClientRoleSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Valida os dados para associação de uma Client Role a um usuário."""</span>
+
+    <span class="n">client_uuid</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"ID interno do cliente no Keycloak."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">nome_permissao</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">"Nome da Client Role no Keycloak."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Direitos autorais .</p>
+  </div>
+
+  Compilado com <a href="https://www.sphinx-doc.org/">Sphinx</a> usando um
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    fornecido por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,212 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="pt-BR" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>apps.keycloak_admin.sessoes.services &mdash; SME-Identidade-Admin-Microsservico</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=2346ddef"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/translations.js?v=71a39b36"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../../../genindex.html" />
+    <link rel="search" title="Buscar" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            SME-Identidade-Admin-Microsservico
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Pesquisar documentos" aria-label="Pesquisar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Menu de navegação">
+              <p class="caption" role="heading"><span class="caption-text">Conteúdo</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arquitetura/visao_geral.html">Visão geral da arquitetura</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arquitetura/fluxo_keycloak_admin.html">Fluxo de integração com o Keycloak</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../controle/index.html">Controle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Referência de código</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Menu de navegação móvel" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">SME-Identidade-Admin-Microsservico</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Navegação da página">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Código do módulo</a></li>
+      <li class="breadcrumb-item active">apps.keycloak_admin.sessoes.services</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código-fonte para apps.keycloak_admin.sessoes.services</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Serviço de administração de sessões no Keycloak."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">apps.keycloak_admin.admin_kc</span><span class="w"> </span><span class="kn">import</span> <span class="n">KeycloakAdminService</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SessaoService">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.sessoes.services.SessaoService">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SessaoService</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Centraliza a administração de sessões de usuários no Keycloak."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">admin</span><span class="p">:</span> <span class="n">KeycloakAdminService</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Inicializa o serviço de administração de sessões.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            admin: Serviço responsável pela comunicação com o Keycloak.</span>
+<span class="sd">                Quando não informado, uma nova instância é criada.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span> <span class="o">=</span> <span class="n">admin</span> <span class="ow">or</span> <span class="n">KeycloakAdminService</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SessaoService.consultar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.sessoes.services.SessaoService.consultar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">consultar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Consulta as sessões ativas de um usuário.</span>
+
+<span class="sd">        A consulta é realizada exclusivamente para o usuário informado.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID interno do usuário no Keycloak.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Lista de sessões ativas do usuário.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Consultando sessões do usuário no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="n">sessoes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_sessions</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizar_sessao</span><span class="p">(</span><span class="n">sessao</span><span class="p">)</span> <span class="k">for</span> <span class="n">sessao</span> <span class="ow">in</span> <span class="n">sessoes</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="SessaoService.encerrar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.sessoes.services.SessaoService.encerrar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encerrar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">usuario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Encerra todas as sessões ativas de um usuário.</span>
+
+<span class="sd">        A operação é realizada exclusivamente para o usuário informado.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            usuario_id: ID interno do usuário no Keycloak.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Encerrando sessões do usuário no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">usuario_id</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">user_logout</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">usuario_id</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalizar_sessao</span><span class="p">(</span>
+        <span class="n">sessao</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Normaliza uma sessão do Keycloak.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sessao: Dados da sessão retornados pelo Keycloak.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dados da sessão normalizados para o contrato do Admin-MS.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="n">sessao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span>
+            <span class="s2">"usuario_id"</span><span class="p">:</span> <span class="n">sessao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"userId"</span><span class="p">),</span>
+            <span class="s2">"usuario"</span><span class="p">:</span> <span class="n">sessao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"username"</span><span class="p">),</span>
+            <span class="s2">"clientes"</span><span class="p">:</span> <span class="n">sessao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"clients"</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="s2">"endereco_ip"</span><span class="p">:</span> <span class="n">sessao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ipAddress"</span><span class="p">),</span>
+            <span class="s2">"inicio"</span><span class="p">:</span> <span class="n">sessao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"start"</span><span class="p">),</span>
+            <span class="s2">"ultimo_acesso"</span><span class="p">:</span> <span class="n">sessao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lastAccess"</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Direitos autorais .</p>
+  </div>
+
+  Compilado com <a href="https://www.sphinx-doc.org/">Sphinx</a> usando um
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    fornecido por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,593 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="pt-BR" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visão geral da arquitetura &mdash; SME-Identidade-Admin-Microsservico</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=2346ddef"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=71a39b36"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Buscar" href="../search.html" />
+    <link rel="next" title="Fluxo de integração com o Keycloak" href="fluxo_keycloak_admin.html" />
+    <link rel="prev" title="SME Identidade Admin Microsserviço" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SME-Identidade-Admin-Microsservico
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Pesquisar documentos" aria-label="Pesquisar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Menu de navegação">
+              <p class="caption" role="heading"><span class="caption-text">Conteúdo</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Visão geral da arquitetura</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#objetivo">Objetivo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#responsabilidades">Responsabilidades</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#visao-arquitetural">Visão arquitetural</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#organizacao-da-aplicacao">Organização da aplicação</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modulo-keycloak-admin">Módulo <code class="docutils literal notranslate"><span class="pre">keycloak_admin</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#camadas-da-aplicacao">Camadas da aplicação</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#views">Views</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#serializers">Serializers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#services">Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#integracao-com-o-keycloak">Integração com o Keycloak</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#recursos-administrados">Recursos administrados</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#usuarios">Usuários</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clientes">Clientes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#permissoes">Permissões</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#grupos">Grupos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sessoes">Sessões</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#autenticacao-da-api">Autenticação da API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#separacao-entre-consumidor-e-keycloak">Separação entre consumidor e Keycloak</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fluxo_keycloak_admin.html">Fluxo de integração com o Keycloak</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../controle/index.html">Controle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Referência de código</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Menu de navegação móvel" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SME-Identidade-Admin-Microsservico</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Navegação da página">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Visão geral da arquitetura</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/arquitetura/visao_geral.md.txt" rel="nofollow"> Ver código-fonte da página</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="visao-geral-da-arquitetura">
+<h1>Visão geral da arquitetura<a class="headerlink" href="#visao-geral-da-arquitetura" title="Link para este cabeçalho"></a></h1>
+<section id="objetivo">
+<h2>Objetivo<a class="headerlink" href="#objetivo" title="Link para este cabeçalho"></a></h2>
+<p>O <strong>SME-Identidade-Admin-Microsserviço</strong> é responsável por centralizar e
+disponibilizar operações administrativas relacionadas à gestão de identidade
+do ecossistema SME.</p>
+<p>O microsserviço atua como uma camada intermediária entre os consumidores
+internos da plataforma e o provedor de identidade <strong>Keycloak</strong>, evitando que
+os consumidores precisem realizar diretamente operações administrativas
+contra a Admin API do Keycloak.</p>
+<p>Através dessa camada, as operações administrativas são padronizadas,
+controladas e expostas por meio de APIs próprias do microsserviço.</p>
+<p>Atualmente, o serviço disponibiliza operações administrativas para:</p>
+<ul class="simple">
+<li><p>usuários;</p></li>
+<li><p>clientes;</p></li>
+<li><p>permissões;</p></li>
+<li><p>grupos;</p></li>
+<li><p>sessões.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="responsabilidades">
+<h2>Responsabilidades<a class="headerlink" href="#responsabilidades" title="Link para este cabeçalho"></a></h2>
+<p>O Admin-MS possui como principais responsabilidades:</p>
+<ul class="simple">
+<li><p>disponibilizar APIs administrativas para os recursos de identidade;</p></li>
+<li><p>validar os dados recebidos pelos consumidores;</p></li>
+<li><p>centralizar as regras de negócio relacionadas às operações administrativas;</p></li>
+<li><p>encapsular a comunicação com o Keycloak;</p></li>
+<li><p>controlar o acesso às APIs administrativas;</p></li>
+<li><p>padronizar as respostas da aplicação;</p></li>
+<li><p>tratar e propagar erros provenientes da integração com o Keycloak;</p></li>
+<li><p>evitar que consumidores dependam diretamente da estrutura da Admin API.</p></li>
+</ul>
+<p>O microsserviço <strong>não substitui o Keycloak</strong>.</p>
+<p>Sua responsabilidade é fornecer uma camada controlada e padronizada para
+acesso às funcionalidades administrativas disponibilizadas pelo provedor
+de identidade.</p>
+</section>
+<hr class="docutils" />
+<section id="visao-arquitetural">
+<h2>Visão arquitetural<a class="headerlink" href="#visao-arquitetural" title="Link para este cabeçalho"></a></h2>
+<p>O fluxo principal da aplicação pode ser representado da seguinte forma:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>┌──────────────────────┐
+│     Consumidor       │
+│      interno         │
+└──────────┬───────────┘
+           │
+           │ HTTP
+           ▼
+┌──────────────────────┐
+│       Admin-MS       │
+│                      │
+│  API / Views         │
+│       │              │
+│       ▼              │
+│  Serializers         │
+│       │              │
+│       ▼              │
+│  Services            │
+│       │              │
+│       ▼              │
+│  keycloak_admin      │
+└──────────┬───────────┘
+           │
+           │ python-keycloak
+           ▼
+┌──────────────────────┐
+│   Keycloak Admin API │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│       Keycloak       │
+└──────────────────────┘
+</pre></div>
+</div>
+<p>O consumidor não precisa conhecer os detalhes da comunicação com o
+Keycloak. A requisição é recebida pelo Admin-MS, validada, processada pela
+camada de serviço e encaminhada ao Keycloak através da integração
+administrativa.</p>
+</section>
+<hr class="docutils" />
+<section id="organizacao-da-aplicacao">
+<h2>Organização da aplicação<a class="headerlink" href="#organizacao-da-aplicacao" title="Link para este cabeçalho"></a></h2>
+<p>A aplicação utiliza Django como framework principal e organiza suas
+funcionalidades em módulos dentro do diretório <code class="docutils literal notranslate"><span class="pre">apps</span></code>.</p>
+<p>A estrutura relacionada à administração do Keycloak é organizada da seguinte
+forma:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>apps/
+└── keycloak_admin/
+    │
+    ├── api/
+    │   ├── base.py
+    │   ├── serializers.py
+    │   └── ...
+    │
+    ├── usuarios/
+    │   ├── api/
+    │   │   ├── serializers.py
+    │   │   ├── urls.py
+    │   │   └── views.py
+    │   ├── services.py
+    │   └── testes/
+    │
+    ├── clientes/
+    │   ├── api/
+    │   ├── services.py
+    │   └── testes/
+    │
+    ├── permissoes/
+    │   ├── api/
+    │   ├── services.py
+    │   └── testes/
+    │
+    ├── grupos/
+    │   ├── api/
+    │   ├── services.py
+    │   └── testes/
+    │
+    └── sessoes/
+        ├── api/
+        ├── services.py
+        └── testes/
+</pre></div>
+</div>
+<p>Cada recurso administrativo possui sua própria organização interna,
+mantendo separadas as responsabilidades de API, regras de negócio e testes.</p>
+</section>
+<hr class="docutils" />
+<section id="modulo-keycloak-admin">
+<h2>Módulo <code class="docutils literal notranslate"><span class="pre">keycloak_admin</span></code><a class="headerlink" href="#modulo-keycloak-admin" title="Link para este cabeçalho"></a></h2>
+<p>O módulo <code class="docutils literal notranslate"><span class="pre">keycloak_admin</span></code> é o núcleo responsável pelas operações
+administrativas relacionadas ao Keycloak.</p>
+<p>Sua principal finalidade é centralizar a integração administrativa e evitar
+que diferentes partes da aplicação precisem implementar diretamente a
+comunicação com o provedor de identidade.</p>
+<p>Os recursos administrativos são separados por domínio:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Módulo</p></th>
+<th class="head"><p>Responsabilidade</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">usuarios</span></code></p></td>
+<td><p>Consulta e gerenciamento de usuários</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">clientes</span></code></p></td>
+<td><p>Consulta, criação e atualização de clients</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">permissoes</span></code></p></td>
+<td><p>Gerenciamento de Realm Roles e Client Roles</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">grupos</span></code></p></td>
+<td><p>Consulta, criação, atualização e associação de roles</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sessoes</span></code></p></td>
+<td><p>Consulta e encerramento de sessões de usuários</p></td>
+</tr>
+</tbody>
+</table>
+<p>Essa divisão permite que cada domínio possua suas próprias APIs,
+serializers, serviços e testes.</p>
+</section>
+<hr class="docutils" />
+<section id="camadas-da-aplicacao">
+<h2>Camadas da aplicação<a class="headerlink" href="#camadas-da-aplicacao" title="Link para este cabeçalho"></a></h2>
+<p>A comunicação interna do Admin-MS segue uma separação por responsabilidades.</p>
+<section id="views">
+<h3>Views<a class="headerlink" href="#views" title="Link para este cabeçalho"></a></h3>
+<p>As views são responsáveis pela camada HTTP da aplicação.</p>
+<p>Suas responsabilidades incluem:</p>
+<ul class="simple">
+<li><p>receber a requisição;</p></li>
+<li><p>obter parâmetros de rota;</p></li>
+<li><p>validar os dados através dos serializers;</p></li>
+<li><p>chamar o serviço responsável pela operação;</p></li>
+<li><p>serializar os dados de resposta;</p></li>
+<li><p>retornar a resposta HTTP adequada.</p></li>
+</ul>
+<p>As views não devem conter regras de negócio relacionadas diretamente ao
+Keycloak.</p>
+<p>Exemplo:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /clientes/
+       │
+       ▼
+ClientListCreateView
+       │
+       ▼
+ClientConsultaSerializer
+       │
+       ▼
+ClientService.consultar()
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="serializers">
+<h3>Serializers<a class="headerlink" href="#serializers" title="Link para este cabeçalho"></a></h3>
+<p>Os serializers são responsáveis pela validação e representação dos dados
+da API.</p>
+<p>Eles definem:</p>
+<ul class="simple">
+<li><p>campos obrigatórios;</p></li>
+<li><p>campos opcionais;</p></li>
+<li><p>tipos de dados;</p></li>
+<li><p>limites;</p></li>
+<li><p>valores padrão;</p></li>
+<li><p>regras de validação da entrada;</p></li>
+<li><p>estrutura das respostas.</p></li>
+</ul>
+<p>A validação dos dados recebidos deve ocorrer antes da chamada ao serviço.</p>
+<p>Exemplo:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Requisição HTTP
+      │
+      ▼
+Serializer
+      │
+      ├── inválido ──► HTTP 400
+      │
+      ▼
+Dados validados
+      │
+      ▼
+Service
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="services">
+<h3>Services<a class="headerlink" href="#services" title="Link para este cabeçalho"></a></h3>
+<p>Os services concentram as operações administrativas e a integração com o
+Keycloak.</p>
+<p>Essa camada é responsável por:</p>
+<ul class="simple">
+<li><p>executar as operações administrativas;</p></li>
+<li><p>obter a conexão administrativa com o Keycloak;</p></li>
+<li><p>utilizar os métodos disponibilizados pelo <code class="docutils literal notranslate"><span class="pre">python-keycloak</span></code>;</p></li>
+<li><p>transformar dados quando necessário;</p></li>
+<li><p>tratar particularidades da Admin API;</p></li>
+<li><p>manter as views independentes da implementação do cliente Keycloak.</p></li>
+</ul>
+<p>Exemplo:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ClientService
+      │
+      ▼
+KeycloakAdmin
+      │
+      ▼
+python-keycloak
+      │
+      ▼
+Keycloak Admin API
+</pre></div>
+</div>
+<p>Essa separação permite substituir ou alterar a implementação da integração
+com o Keycloak sem precisar modificar diretamente os endpoints da API.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="integracao-com-o-keycloak">
+<h2>Integração com o Keycloak<a class="headerlink" href="#integracao-com-o-keycloak" title="Link para este cabeçalho"></a></h2>
+<p>A comunicação administrativa com o Keycloak é realizada utilizando a
+biblioteca <code class="docutils literal notranslate"><span class="pre">python-keycloak</span></code>.</p>
+<p>O Admin-MS não implementa diretamente as requisições HTTP da Admin API.
+Em vez disso, utiliza a abstração fornecida pelo cliente Python.</p>
+<p>O fluxo de integração é:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Admin-MS
+   │
+   ▼
+Service
+   │
+   ▼
+KeycloakAdmin
+   │
+   ▼
+python-keycloak
+   │
+   ▼
+Keycloak Admin API
+</pre></div>
+</div>
+<p>Por exemplo, uma operação de consulta de usuários segue conceitualmente o
+fluxo:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GET /usuarios/
+      │
+      ▼
+UsuarioListView
+      │
+      ▼
+UsuarioService.consultar()
+      │
+      ▼
+KeycloakAdmin.get_users()
+      │
+      ▼
+Keycloak Admin API
+      │
+      ▼
+Keycloak
+</pre></div>
+</div>
+<p>O mesmo princípio é utilizado pelos demais recursos administrativos.</p>
+</section>
+<hr class="docutils" />
+<section id="recursos-administrados">
+<h2>Recursos administrados<a class="headerlink" href="#recursos-administrados" title="Link para este cabeçalho"></a></h2>
+<section id="usuarios">
+<h3>Usuários<a class="headerlink" href="#usuarios" title="Link para este cabeçalho"></a></h3>
+<p>O módulo de usuários disponibiliza operações relacionadas ao gerenciamento
+dos usuários existentes no Keycloak.</p>
+<p>Entre as operações estão:</p>
+<ul class="simple">
+<li><p>consulta de usuários;</p></li>
+<li><p>consulta por identificadores ou atributos suportados;</p></li>
+<li><p>criação de usuários;</p></li>
+<li><p>atualização de usuários;</p></li>
+<li><p>alteração de senha.</p></li>
+<li><p>alteração do e-mail.</p></li>
+<li><p>associação de Realm Roles/ Clients Roles/ Grupos;</p></li>
+<li><p>desassociação de Realm Roles/ Clients Roles/ Grupos;</p></li>
+</ul>
+<p>As operações são encapsuladas pelo <code class="docutils literal notranslate"><span class="pre">UsuarioService</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="clientes">
+<h3>Clientes<a class="headerlink" href="#clientes" title="Link para este cabeçalho"></a></h3>
+<p>O módulo de clientes permite administrar as aplicações registradas no
+Keycloak.</p>
+<p>Entre as operações estão:</p>
+<ul class="simple">
+<li><p>consulta de clientes;</p></li>
+<li><p>consulta de um cliente específico;</p></li>
+<li><p>criação de clientes;</p></li>
+<li><p>atualização de clientes.</p></li>
+</ul>
+<p>As operações são encapsuladas pelo <code class="docutils literal notranslate"><span class="pre">ClientService</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="permissoes">
+<h3>Permissões<a class="headerlink" href="#permissoes" title="Link para este cabeçalho"></a></h3>
+<p>O módulo de permissões administra roles do Keycloak.</p>
+<p>São tratados dois tipos de roles:</p>
+<ul class="simple">
+<li><p><strong>Realm Roles</strong>;</p></li>
+<li><p><strong>Client Roles</strong>.</p></li>
+</ul>
+<p>A separação é importante porque as Client Roles pertencem a um client
+específico, enquanto as Realm Roles pertencem diretamente ao Realm.</p>
+<p>O <code class="docutils literal notranslate"><span class="pre">RoleService</span></code> encapsula as operações de consulta, criação e atualização
+dessas permissões.</p>
+</section>
+<hr class="docutils" />
+<section id="grupos">
+<h3>Grupos<a class="headerlink" href="#grupos" title="Link para este cabeçalho"></a></h3>
+<p>O módulo de grupos permite administrar grupos do Realm.</p>
+<p>Entre as operações estão:</p>
+<ul class="simple">
+<li><p>consulta de grupos;</p></li>
+<li><p>criação de grupos;</p></li>
+<li><p>atualização de grupos;</p></li>
+<li><p>associação de Realm Roles;</p></li>
+<li><p>desassociação de Realm Roles;</p></li>
+<li><p>associação de Client Roles;</p></li>
+<li><p>desassociação de Client Roles.</p></li>
+</ul>
+<p>As operações são encapsuladas pelo <code class="docutils literal notranslate"><span class="pre">GrupoService</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="sessoes">
+<h3>Sessões<a class="headerlink" href="#sessoes" title="Link para este cabeçalho"></a></h3>
+<p>O módulo de sessões possui como objetivo administrar sessões de um usuário
+específico.</p>
+<p>São disponibilizadas operações para:</p>
+<ul class="simple">
+<li><p>consultar as sessões ativas de um usuário;</p></li>
+<li><p>encerrar as sessões ativas de um usuário.</p></li>
+</ul>
+<p>A operação de encerramento é direcionada exclusivamente ao usuário informado,
+não realizando logout global de todo o Realm ou de todos os usuários.</p>
+<p>As operações são encapsuladas pelo <code class="docutils literal notranslate"><span class="pre">SessaoService</span></code>.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="autenticacao-da-api">
+<h2>Autenticação da API<a class="headerlink" href="#autenticacao-da-api" title="Link para este cabeçalho"></a></h2>
+<p>O acesso às APIs administrativas é protegido através de <code class="docutils literal notranslate"><span class="pre">API</span> <span class="pre">Key</span></code>.</p>
+<p>O mecanismo de autenticação é aplicado antes da execução das operações
+administrativas.</p>
+<p>O fluxo pode ser representado da seguinte forma:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Consumidor
+    │
+    │ X-API-Key
+    ▼
+Admin-MS
+    │
+    ▼
+Autenticação
+    │
+    ├── inválida ──► HTTP 401
+    │
+    ▼
+API administrativa
+    │
+    ▼
+Service
+    │
+    ▼
+Keycloak
+</pre></div>
+</div>
+<p>A autenticação da API do Admin-MS é independente das credenciais utilizadas
+internamente para comunicação administrativa com o Keycloak.</p>
+<p>Isso significa que existem dois contextos distintos:</p>
+<ol class="arabic simple">
+<li><p>autenticação do consumidor perante o Admin-MS;</p></li>
+<li><p>autenticação administrativa do Admin-MS perante o Keycloak.</p></li>
+</ol>
+</section>
+<hr class="docutils" />
+<section id="separacao-entre-consumidor-e-keycloak">
+<h2>Separação entre consumidor e Keycloak<a class="headerlink" href="#separacao-entre-consumidor-e-keycloak" title="Link para este cabeçalho"></a></h2>
+<p>Um dos principais objetivos arquiteturais do Admin-MS é evitar o acoplamento
+direto dos consumidores com a Admin API do Keycloak.</p>
+<p>Sem o Admin-MS, um consumidor precisaria conhecer detalhes como:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Consumidor
+   │
+   ├── autenticação administrativa
+   ├── endpoints do Keycloak
+   ├── formatos da Admin API
+   ├── regras específicas
+   └── tratamento de erros
+</pre></div>
+</div>
+<p>Com o Admin-MS:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Consumidor
+   │
+   ▼
+Admin-MS
+   │
+   ├── autenticação
+   ├── validação
+   ├── regras administrativas
+   ├── transformação
+   └── integração
+   │
+   ▼
+Keycloak
+</pre></div>
+</div>
+<p>Dessa forma, alterações na implementação da integração podem ser
+concentradas no Admin-MS, reduzindo o acoplamento dos consumidores ao
+provedor de identidade.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Rodapé">
+        <a href="../index.html" class="btn btn-neutral float-left" title="SME Identidade Admin Microsserviço" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Anterior</a>
+        <a href="fluxo_keycloak_admin.html" class="btn btn-neutral float-right" title="Fluxo de integração com o Keycloak" accesskey="n" rel="next">Próximo <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Direitos autorais .</p>
+  </div>
+
+  Compilado com <a href="https://www.sphinx-doc.org/">Sphinx</a> usando um
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    fornecido por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

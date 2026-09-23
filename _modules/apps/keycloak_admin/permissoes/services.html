@@ -1,0 +1,473 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="pt-BR" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>apps.keycloak_admin.permissoes.services &mdash; SME-Identidade-Admin-Microsservico</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=2346ddef"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/translations.js?v=71a39b36"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../../../genindex.html" />
+    <link rel="search" title="Buscar" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            SME-Identidade-Admin-Microsservico
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Pesquisar documentos" aria-label="Pesquisar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Menu de navegação">
+              <p class="caption" role="heading"><span class="caption-text">Conteúdo</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arquitetura/visao_geral.html">Visão geral da arquitetura</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arquitetura/fluxo_keycloak_admin.html">Fluxo de integração com o Keycloak</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../controle/index.html">Controle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Referência de código</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Menu de navegação móvel" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">SME-Identidade-Admin-Microsservico</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Navegação da página">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Código do módulo</a></li>
+      <li class="breadcrumb-item active">apps.keycloak_admin.permissoes.services</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código-fonte para apps.keycloak_admin.permissoes.services</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Serviço de administração de permissões no Keycloak."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">apps.keycloak_admin.admin_kc</span><span class="w"> </span><span class="kn">import</span> <span class="n">KeycloakAdminService</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RoleService">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.permissoes.services.RoleService">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RoleService</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Centraliza as operações administrativas de permissões."""</span>
+
+    <span class="n">TIPOS_VALIDOS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"realm"</span><span class="p">,</span>
+        <span class="s2">"client"</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">admin</span><span class="p">:</span> <span class="n">KeycloakAdminService</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Inicializa o serviço de administração de permissões.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            admin: Serviço responsável pela comunicação com o Keycloak.</span>
+<span class="sd">                Quando não informado, uma nova instância é criada.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span> <span class="o">=</span> <span class="n">admin</span> <span class="ow">or</span> <span class="n">KeycloakAdminService</span><span class="p">()</span>
+
+<div class="viewcode-block" id="RoleService.criar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.permissoes.services.RoleService.criar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">criar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">tipo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"realm"</span><span class="p">,</span>
+        <span class="n">client_uuid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">descricao</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">atributos</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Cria uma permissão no Realm ou em um client.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            nome: Nome da permissão.</span>
+<span class="sd">            tipo: Tipo da permissão. Aceita ``realm`` ou ``client``.</span>
+<span class="sd">            client_uuid: ID interno do client quando ``tipo`` for</span>
+<span class="sd">                ``client``.</span>
+<span class="sd">            descricao: Descrição da permissão.</span>
+<span class="sd">            atributos: Atributos personalizados da permissão.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: Se o tipo informado for inválido ou se</span>
+<span class="sd">                ``client_uuid`` for incompatível com o tipo.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validar_tipo</span><span class="p">(</span>
+            <span class="n">tipo</span><span class="o">=</span><span class="n">tipo</span><span class="p">,</span>
+            <span class="n">client_uuid</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">nome</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">descricao</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descricao</span>
+
+        <span class="k">if</span> <span class="n">atributos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"attributes"</span><span class="p">]</span> <span class="o">=</span> <span class="n">atributos</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Criando permissão no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"tipo"</span><span class="p">:</span> <span class="n">tipo</span><span class="p">,</span>
+                <span class="s2">"nome"</span><span class="p">:</span> <span class="n">nome</span><span class="p">,</span>
+                <span class="s2">"client_uuid"</span><span class="p">:</span> <span class="n">client_uuid</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tipo</span> <span class="o">==</span> <span class="s2">"realm"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">create_realm_role</span><span class="p">,</span>
+                <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">assert</span> <span class="n">client_uuid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">create_client_role</span><span class="p">,</span>
+            <span class="n">client_role_id</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+            <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RoleService.consultar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.permissoes.services.RoleService.consultar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">consultar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tipo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"realm"</span><span class="p">,</span>
+        <span class="n">client_uuid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">limite</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Consulta permissões do Realm ou de um client.</span>
+
+<span class="sd">        Quando ``nome`` é informado, consulta somente a permissão</span>
+<span class="sd">        correspondente. Caso contrário, lista as permissões disponíveis,</span>
+<span class="sd">        respeitando o limite informado.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            nome: Nome da permissão a ser consultada.</span>
+<span class="sd">            tipo: Tipo da permissão. Aceita ``realm`` ou ``client``.</span>
+<span class="sd">            client_uuid: ID interno do client quando ``tipo`` for</span>
+<span class="sd">                ``client``.</span>
+<span class="sd">            limite: Quantidade máxima de permissões retornadas.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Lista de permissões normalizadas.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: Se o tipo, os parâmetros ou o limite forem</span>
+<span class="sd">                inválidos.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validar_tipo</span><span class="p">(</span>
+            <span class="n">tipo</span><span class="o">=</span><span class="n">tipo</span><span class="p">,</span>
+            <span class="n">client_uuid</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validar_limite</span><span class="p">(</span><span class="n">limite</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Consultando permissões no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"tipo"</span><span class="p">:</span> <span class="n">tipo</span><span class="p">,</span>
+                <span class="s2">"nome"</span><span class="p">:</span> <span class="n">nome</span><span class="p">,</span>
+                <span class="s2">"client_uuid"</span><span class="p">:</span> <span class="n">client_uuid</span><span class="p">,</span>
+                <span class="s2">"limite"</span><span class="p">:</span> <span class="n">limite</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tipo</span> <span class="o">==</span> <span class="s2">"realm"</span><span class="p">:</span>
+            <span class="n">permissoes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_consultar_realm</span><span class="p">(</span>
+                <span class="n">nome</span><span class="o">=</span><span class="n">nome</span><span class="p">,</span>
+                <span class="n">limite</span><span class="o">=</span><span class="n">limite</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">permissoes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_consultar_client</span><span class="p">(</span>
+                <span class="n">nome</span><span class="o">=</span><span class="n">nome</span><span class="p">,</span>
+                <span class="n">client_uuid</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+                <span class="n">limite</span><span class="o">=</span><span class="n">limite</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalizar_permissao</span><span class="p">(</span><span class="n">permissao</span><span class="p">)</span> <span class="k">for</span> <span class="n">permissao</span> <span class="ow">in</span> <span class="n">permissoes</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="RoleService.atualizar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.permissoes.services.RoleService.atualizar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">atualizar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">tipo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"realm"</span><span class="p">,</span>
+        <span class="n">client_uuid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">novo_nome</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">descricao</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">atributos</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Atualiza uma permissão do Realm ou de um client.</span>
+
+<span class="sd">        Apenas os campos informados são alterados.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            nome: Nome atual da permissão.</span>
+<span class="sd">            tipo: Tipo da permissão. Aceita ``realm`` ou ``client``.</span>
+<span class="sd">            client_uuid: ID interno do client quando ``tipo`` for</span>
+<span class="sd">                ``client``.</span>
+<span class="sd">            novo_nome: Novo nome da permissão.</span>
+<span class="sd">            descricao: Nova descrição da permissão.</span>
+<span class="sd">            atributos: Novos atributos da permissão.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: Se o tipo ou os parâmetros forem inválidos ou</span>
+<span class="sd">                se nenhum campo for informado para atualização.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validar_tipo</span><span class="p">(</span>
+            <span class="n">tipo</span><span class="o">=</span><span class="n">tipo</span><span class="p">,</span>
+            <span class="n">client_uuid</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">novo_nome</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">novo_nome</span>
+
+        <span class="k">if</span> <span class="n">descricao</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descricao</span>
+
+        <span class="k">if</span> <span class="n">atributos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"attributes"</span><span class="p">]</span> <span class="o">=</span> <span class="n">atributos</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">payload</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Informe ao menos um campo para atualização."</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Atualizando permissão no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"tipo"</span><span class="p">:</span> <span class="n">tipo</span><span class="p">,</span>
+                <span class="s2">"nome"</span><span class="p">:</span> <span class="n">nome</span><span class="p">,</span>
+                <span class="s2">"client_uuid"</span><span class="p">:</span> <span class="n">client_uuid</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tipo</span> <span class="o">==</span> <span class="s2">"realm"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">update_realm_role</span><span class="p">,</span>
+                <span class="n">role_name</span><span class="o">=</span><span class="n">nome</span><span class="p">,</span>
+                <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">assert</span> <span class="n">client_uuid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">update_client_role</span><span class="p">,</span>
+            <span class="n">client_id</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+            <span class="n">role_name</span><span class="o">=</span><span class="n">nome</span><span class="p">,</span>
+            <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_consultar_realm</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">limite</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Consulta permissões diretamente no Realm.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            nome: Nome da permissão. Quando informado, consulta</span>
+<span class="sd">                somente essa permissão.</span>
+<span class="sd">            limite: Quantidade máxima de permissões retornadas.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Permissões retornadas pelo Keycloak.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">nome</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">permissao</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_realm_role</span><span class="p">,</span>
+                <span class="n">role_name</span><span class="o">=</span><span class="n">nome</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">[</span><span class="n">permissao</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_realm_roles</span><span class="p">,</span>
+            <span class="n">query</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"max"</span><span class="p">:</span> <span class="n">limite</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_consultar_client</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client_uuid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">limite</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Consulta permissões de um client.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            nome: Nome da permissão. Quando informado, consulta</span>
+<span class="sd">                somente essa permissão.</span>
+<span class="sd">            client_uuid: ID interno do client.</span>
+<span class="sd">            limite: Quantidade máxima de permissões retornadas.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Permissões retornadas pelo Keycloak.</span>
+<span class="sd">        """</span>
+        <span class="k">assert</span> <span class="n">client_uuid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">nome</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">permissao</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_client_role</span><span class="p">,</span>
+                <span class="n">client_id</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+                <span class="n">role_name</span><span class="o">=</span><span class="n">nome</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">[</span><span class="n">permissao</span><span class="p">]</span>
+
+        <span class="n">permissoes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_client_roles</span><span class="p">,</span>
+            <span class="n">client_id</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">permissoes</span><span class="p">[:</span><span class="n">limite</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validar_tipo</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">tipo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">client_uuid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Valida o tipo da permissão e o client associado.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tipo: Tipo da permissão. Aceita ``realm`` ou ``client``.</span>
+<span class="sd">            client_uuid: ID interno do client.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: Se o tipo for inválido, se ``client_uuid`` for</span>
+<span class="sd">                obrigatório e não for informado, ou se for informado</span>
+<span class="sd">                indevidamente para uma permissão do Realm.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">tipo</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">TIPOS_VALIDOS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Tipo de permissão inválido. Utilize 'realm' ou 'client'."</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tipo</span> <span class="o">==</span> <span class="s2">"client"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">client_uuid</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"client_uuid é obrigatório para permissões de cliente."</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tipo</span> <span class="o">==</span> <span class="s2">"realm"</span> <span class="ow">and</span> <span class="n">client_uuid</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"client_uuid não deve ser informado para "</span>
+                <span class="s2">"permissões do Realm."</span>
+            <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validar_limite</span><span class="p">(</span>
+        <span class="n">limite</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Valida o limite utilizado nas consultas.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            limite: Quantidade máxima de permissões retornadas.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: Se o limite for menor que 1.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">limite</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"limite deve ser maior ou igual a 1."</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalizar_permissao</span><span class="p">(</span>
+        <span class="n">permissao</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Normaliza uma permissão para o contrato interno.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            permissao: Dados da permissão retornados pelo Keycloak.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dados da permissão normalizados.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="n">permissao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span>
+            <span class="s2">"nome"</span><span class="p">:</span> <span class="n">permissao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">),</span>
+            <span class="s2">"descricao"</span><span class="p">:</span> <span class="n">permissao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"description"</span><span class="p">),</span>
+            <span class="s2">"composite"</span><span class="p">:</span> <span class="n">permissao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"composite"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="s2">"container_id"</span><span class="p">:</span> <span class="n">permissao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"containerId"</span><span class="p">),</span>
+            <span class="s2">"atributos"</span><span class="p">:</span> <span class="n">permissao</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attributes"</span><span class="p">,</span> <span class="p">{}),</span>
+        <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Direitos autorais .</p>
+  </div>
+
+  Compilado com <a href="https://www.sphinx-doc.org/">Sphinx</a> usando um
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    fornecido por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

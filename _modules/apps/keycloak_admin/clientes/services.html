@@ -1,0 +1,391 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="pt-BR" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>apps.keycloak_admin.clientes.services &mdash; SME-Identidade-Admin-Microsservico</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=2346ddef"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/translations.js?v=71a39b36"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Índice" href="../../../../genindex.html" />
+    <link rel="search" title="Buscar" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            SME-Identidade-Admin-Microsservico
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Pesquisar documentos" aria-label="Pesquisar documentos" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Menu de navegação">
+              <p class="caption" role="heading"><span class="caption-text">Conteúdo</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arquitetura/visao_geral.html">Visão geral da arquitetura</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arquitetura/fluxo_keycloak_admin.html">Fluxo de integração com o Keycloak</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../controle/index.html">Controle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Referência de código</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Menu de navegação móvel" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">SME-Identidade-Admin-Microsservico</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Navegação da página">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Código do módulo</a></li>
+      <li class="breadcrumb-item active">apps.keycloak_admin.clientes.services</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Código-fonte para apps.keycloak_admin.clientes.services</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Serviço de administração de clients no Keycloak."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">unicodedata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">apps.keycloak_admin.admin_kc</span><span class="w"> </span><span class="kn">import</span> <span class="n">KeycloakAdminService</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ClientService">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.clientes.services.ClientService">[documentos]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClientService</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Centraliza as operações administrativas de clients no Keycloak.</span>
+
+<span class="sd">    Este serviço encapsula as chamadas à Admin API do Keycloak,</span>
+<span class="sd">    disponibilizando operações para criação, consulta e atualização</span>
+<span class="sd">    de clients sem expor diretamente o cliente da biblioteca</span>
+<span class="sd">    ``python-keycloak`` às camadas superiores da aplicação.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">admin</span><span class="p">:</span> <span class="n">KeycloakAdminService</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Inicializa o serviço de administração de clients.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            admin: Serviço responsável pela comunicação com o Keycloak.</span>
+<span class="sd">                Quando não informado, uma nova instância é criada usando</span>
+<span class="sd">                as configurações padrão da aplicação.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span> <span class="o">=</span> <span class="n">admin</span> <span class="ow">or</span> <span class="n">KeycloakAdminService</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ClientService.criar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.clientes.services.ClientService.criar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">criar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">client_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">descricao</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">habilitado</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">client_publico</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">protocolo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"openid-connect"</span><span class="p">,</span>
+        <span class="n">redirect_uris</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">web_origins</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">atributos</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Cria um client no realm configurado do Keycloak.</span>
+
+<span class="sd">        O ``client_id`` recebido é normalizado antes da criação para</span>
+<span class="sd">        garantir um identificador compatível com o padrão utilizado</span>
+<span class="sd">        pela aplicação.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client_id: Identificador público do client. O valor é</span>
+<span class="sd">                convertido para o formato slug antes da criação.</span>
+<span class="sd">            nome: Nome de apresentação do client.</span>
+<span class="sd">            descricao: Descrição do client.</span>
+<span class="sd">            habilitado: Define se o client será criado habilitado.</span>
+<span class="sd">            client_publico: Define se o client será público.</span>
+<span class="sd">            protocolo: Protocolo utilizado pelo client.</span>
+<span class="sd">            redirect_uris: Lista de URIs autorizadas para redirecionamento.</span>
+<span class="sd">                Quando não informada, utiliza ``["*"]``.</span>
+<span class="sd">            web_origins: Lista de origens web autorizadas. Quando não</span>
+<span class="sd">                informada, utiliza ``["*"]``.</span>
+<span class="sd">            atributos: Atributos adicionais do client.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ID interno do client criado no Keycloak.</span>
+<span class="sd">        """</span>
+        <span class="n">client_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slugificar_client_id</span><span class="p">(</span><span class="n">client_id</span><span class="p">)</span>
+
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"clientId"</span><span class="p">:</span> <span class="n">client_id</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">nome</span><span class="p">,</span>
+            <span class="s2">"description"</span><span class="p">:</span> <span class="n">descricao</span><span class="p">,</span>
+            <span class="s2">"enabled"</span><span class="p">:</span> <span class="n">habilitado</span><span class="p">,</span>
+            <span class="s2">"protocol"</span><span class="p">:</span> <span class="n">protocolo</span><span class="p">,</span>
+            <span class="s2">"publicClient"</span><span class="p">:</span> <span class="n">client_publico</span><span class="p">,</span>
+            <span class="s2">"standardFlowEnabled"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"directAccessGrantsEnabled"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"serviceAccountsEnabled"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"redirectUris"</span><span class="p">:</span> <span class="n">redirect_uris</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">"*"</span><span class="p">],</span>
+            <span class="s2">"webOrigins"</span><span class="p">:</span> <span class="n">web_origins</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">"*"</span><span class="p">],</span>
+            <span class="s2">"attributes"</span><span class="p">:</span> <span class="n">atributos</span> <span class="ow">or</span> <span class="p">{},</span>
+        <span class="p">}</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Criando client no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s2">"client_id"</span><span class="p">:</span> <span class="n">client_id</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">create_client</span><span class="p">,</span>
+            <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ClientService.consultar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.clientes.services.ClientService.consultar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">consultar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">client_uuid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Consulta clients do realm configurado.</span>
+
+<span class="sd">        Quando ``client_uuid`` é informado, a consulta é realizada</span>
+<span class="sd">        diretamente pelo UUID interno do client. Caso contrário,</span>
+<span class="sd">        todos os clients disponíveis no realm são consultados.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client_uuid: ID interno do client no Keycloak. Quando não</span>
+<span class="sd">                informado, todos os clients do realm são retornados.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Lista de clients com os campos normalizados para o contrato</span>
+<span class="sd">            interno da aplicação.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Consultando clients no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"client_uuid"</span><span class="p">:</span> <span class="n">client_uuid</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">client_uuid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_client</span><span class="p">,</span>
+                <span class="n">client_id</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_normalizar_client</span><span class="p">(</span><span class="n">client</span><span class="p">),</span>
+            <span class="p">]</span>
+
+        <span class="n">clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">get_clients</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_normalizar_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span> <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="n">clients</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="ClientService.atualizar">
+<a class="viewcode-back" href="../../../../api.html#apps.keycloak_admin.clientes.services.ClientService.atualizar">[documentos]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">atualizar</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">client_uuid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nome</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">descricao</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">habilitado</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client_publico</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">protocolo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">redirect_uris</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">web_origins</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">atributos</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Atualiza parcialmente a configuração de um client.</span>
+
+<span class="sd">        Somente os campos explicitamente informados são enviados ao</span>
+<span class="sd">        Keycloak. Caso nenhum campo seja informado, nenhuma requisição</span>
+<span class="sd">        é realizada.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client_uuid: ID interno do client no Keycloak.</span>
+<span class="sd">            nome: Novo nome de apresentação do client.</span>
+<span class="sd">            descricao: Nova descrição do client.</span>
+<span class="sd">            habilitado: Define se o client ficará habilitado.</span>
+<span class="sd">            client_publico: Define se o client será público.</span>
+<span class="sd">            protocolo: Novo protocolo utilizado pelo client.</span>
+<span class="sd">            redirect_uris: Nova lista de URIs autorizadas para</span>
+<span class="sd">                redirecionamento.</span>
+<span class="sd">            web_origins: Nova lista de origens web autorizadas.</span>
+<span class="sd">            atributos: Novos atributos do client.</span>
+<span class="sd">        """</span>
+        <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">nome</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">nome</span>
+
+        <span class="k">if</span> <span class="n">descricao</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descricao</span>
+
+        <span class="k">if</span> <span class="n">habilitado</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"enabled"</span><span class="p">]</span> <span class="o">=</span> <span class="n">habilitado</span>
+
+        <span class="k">if</span> <span class="n">client_publico</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"publicClient"</span><span class="p">]</span> <span class="o">=</span> <span class="n">client_publico</span>
+
+        <span class="k">if</span> <span class="n">protocolo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"protocol"</span><span class="p">]</span> <span class="o">=</span> <span class="n">protocolo</span>
+
+        <span class="k">if</span> <span class="n">redirect_uris</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"redirectUris"</span><span class="p">]</span> <span class="o">=</span> <span class="n">redirect_uris</span>
+
+        <span class="k">if</span> <span class="n">web_origins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"webOrigins"</span><span class="p">]</span> <span class="o">=</span> <span class="n">web_origins</span>
+
+        <span class="k">if</span> <span class="n">atributos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"attributes"</span><span class="p">]</span> <span class="o">=</span> <span class="n">atributos</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">payload</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Atualizando client no Keycloak."</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s2">"client_uuid"</span><span class="p">:</span> <span class="n">client_uuid</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">executar</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">admin</span><span class="o">.</span><span class="n">cliente</span><span class="o">.</span><span class="n">update_client</span><span class="p">,</span>
+            <span class="n">client_id</span><span class="o">=</span><span class="n">client_uuid</span><span class="p">,</span>
+            <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalizar_client</span><span class="p">(</span>
+        <span class="n">client</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Normaliza os dados de um client para o contrato da aplicação.</span>
+
+<span class="sd">        A normalização evita que a estrutura retornada diretamente pela</span>
+<span class="sd">        Admin API do Keycloak seja exposta às camadas superiores.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            client: Dados do client retornados pelo Keycloak.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dicionário contendo os dados do client no formato utilizado</span>
+<span class="sd">            internamente pela aplicação.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span>
+            <span class="s2">"client_id"</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"clientId"</span><span class="p">),</span>
+            <span class="s2">"nome"</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">),</span>
+            <span class="s2">"habilitado"</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="s2">"client_publico"</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"publicClient"</span><span class="p">,</span>
+                <span class="kc">False</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s2">"protocolo"</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"protocol"</span><span class="p">,</span>
+                <span class="s2">"openid-connect"</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s2">"redirect_uris"</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"redirectUris"</span><span class="p">,</span>
+                <span class="p">[],</span>
+            <span class="p">),</span>
+            <span class="s2">"web_origins"</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"webOrigins"</span><span class="p">,</span>
+                <span class="p">[],</span>
+            <span class="p">),</span>
+            <span class="s2">"atributos"</span><span class="p">:</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"attributes"</span><span class="p">,</span>
+                <span class="p">{},</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_slugificar_client_id</span><span class="p">(</span><span class="n">nome</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Trata o nome informado em um ``client_id`` normalizado.</span>
+
+<span class="sd">        A normalização remove acentos, substitui caracteres que não</span>
+<span class="sd">        sejam alfanuméricos por hífens, remove hífens nas extremidades</span>
+<span class="sd">        e converte o resultado para letras minúsculas.</span>
+
+<span class="sd">        Quando o valor informado não produz um identificador válido,</span>
+<span class="sd">        utiliza ``sistema-sem-nome`` como valor padrão.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            nome: Nome utilizado como base para geração do ``client_id``.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Identificador normalizado no formato slug.</span>
+<span class="sd">        """</span>
+        <span class="n">valor</span> <span class="o">=</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s2">"NFKD"</span><span class="p">,</span> <span class="n">nome</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">valor</span> <span class="o">=</span> <span class="n">valor</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="s2">"ignore"</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">)</span>
+        <span class="n">valor</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^a-zA-Z0-9]+"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">valor</span><span class="p">)</span>
+        <span class="n">valor</span> <span class="o">=</span> <span class="n">valor</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">valor</span> <span class="ow">or</span> <span class="s2">"sistema-sem-nome"</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Direitos autorais .</p>
+  </div>
+
+  Compilado com <a href="https://www.sphinx-doc.org/">Sphinx</a> usando um
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">tema</a>
+    fornecido por <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
