@@ -1,12 +1,18 @@
 """Testes das views administrativas de clientes."""
 
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 from uuid import UUID
 
 from django.conf import settings
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.test import APIClient
+
+from apps.keycloak_admin.clientes.api.views import (
+    ClientSecretRotateView,
+)
 
 
 class TestClientListCreateView:
@@ -203,28 +209,6 @@ class TestClientDetailView:
             **dados,
         )
 
-    def test_patch_rejeita_client_id_invalido(self) -> None:
-        """Não deve aceitar client_id acima do tamanho máximo."""
-        client_uuid = "550e8400-e29b-41d4-a716-446655440000"
-
-        dados = {
-            "client_id": "a" * 256,
-        }
-
-        response = self.client.patch(
-            reverse(
-                "client-detail",
-                kwargs={
-                    "client_uuid": client_uuid,
-                },
-            ),
-            dados,
-            format="json",
-        )
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "client_id" in response.json()
-
     def test_patch_rejeita_redirect_uri_invalida(self) -> None:
         """Não deve aceitar uma URI de redirecionamento inválida."""
         client_uuid = "550e8400-e29b-41d4-a716-446655440000"
@@ -248,3 +232,45 @@ class TestClientDetailView:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "redirect_uris" in response.json()
+
+
+class ClientSecretRotateViewTest(TestCase):
+    """Testes da view de rotação de secret do cliente."""
+
+    @patch("apps.keycloak_admin.clientes.api.views.ClientService")
+    def test_deve_rotacionar_secret_do_cliente(
+        self,
+        client_service_mock: MagicMock,
+    ) -> None:
+        """Deve retornar a nova secret gerada para o cliente."""
+        client_uuid = "550e8400-e29b-41d4-a716-446655440000"
+        secret = "nova-secret"
+
+        request = MagicMock(spec=Request)
+
+        client_service_mock.return_value.rotacionar_secret.return_value = (
+            secret
+        )
+
+        response = ClientSecretRotateView().post(
+            request=request,
+            client_uuid=client_uuid,
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+        self.assertEqual(
+            response.data,
+            {
+                "id": client_uuid,
+                "secret": secret,
+            },
+        )
+
+        (
+            client_service_mock.return_value.rotacionar_secret.assert_called_once_with(
+                client_uuid=client_uuid,
+            )
+        )

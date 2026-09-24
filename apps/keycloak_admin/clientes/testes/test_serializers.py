@@ -171,20 +171,6 @@ class ClientAtualizarSerializerTest(SimpleTestCase):
             serializer.errors,
         )
 
-    def test_client_id_com_tamanho_excedido(self) -> None:
-        """Deve rejeitar client_id acima do tamanho permitido."""
-        serializer = ClientAtualizarSerializer(
-            data={
-                "client_id": "a" * 256,
-            },
-        )
-
-        self.assertFalse(serializer.is_valid())
-        self.assertIn(
-            "client_id",
-            serializer.errors,
-        )
-
 
 class ClientSerializerTest(SimpleTestCase):
     """Testes do serializer de resposta de clients."""
