@@ -72,11 +72,6 @@ class ClientConsultaSerializer(serializers.Serializer):
 class ClientAtualizarSerializer(serializers.Serializer):
     """Valida os dados para atualização de um cliente."""
 
-    client_id = serializers.CharField(
-        max_length=255,
-        required=False,
-        help_text="Novo identificador público do client.",
-    )
     nome = serializers.CharField(
         max_length=255,
         required=False,
@@ -139,3 +134,14 @@ class ClientCriadoSerializer(serializers.Serializer):
     """Representa a resposta da criação de um cliente."""
 
     id = serializers.CharField()
+
+
+class ClientSecretRotacionadaSerializer(serializers.Serializer):
+    """Representa a secret gerada após a rotação."""
+
+    id = serializers.CharField(
+        help_text="UUID interno do cliente no Keycloak.",
+    )
+    secret = serializers.CharField(
+        help_text="Nova secret gerada para o cliente.",
+    )

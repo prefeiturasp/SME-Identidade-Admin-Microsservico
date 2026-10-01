@@ -11,6 +11,7 @@ from apps.keycloak_admin.clientes.api.serializers import (
     ClientConsultaSerializer,
     ClientCriadoSerializer,
     ClientCriarSerializer,
+    ClientSecretRotacionadaSerializer,
     ClientSerializer,
 )
 from apps.keycloak_admin.clientes.services import ClientService
@@ -148,5 +149,56 @@ class ClientDetailView(KeycloakAdminAPIView):
         )
 
         return Response(
+            status=status.HTTP_200_OK,
+        )
+
+
+@extend_schema(
+    tags=_TAG,
+    summary="Secret do cliente",
+    description="Gerencia a secret de um cliente específico.",
+)
+class ClientSecretRotateView(KeycloakAdminAPIView):
+    """Endpoint para rotação da secret de um cliente."""
+
+    @extend_schema(
+        summary="Rotacionar secret do cliente",
+        description=(
+            "Gera uma nova secret para o cliente informado, "
+            "invalidando a secret anterior."
+        ),
+        request=None,
+        responses={
+            200: ClientSecretRotacionadaSerializer,
+            **KeycloakAdminAPIView.ERROS_PADRAO,
+        },
+    )
+    def post(
+        self,
+        request: Request,
+        client_uuid: str,
+    ) -> Response:
+        """Rotaciona a secret de um cliente.
+
+        Args:
+            request: Requisição HTTP.
+            client_uuid: ID interno do cliente no Keycloak.
+
+        Returns:
+            Nova secret gerada para o cliente.
+        """
+        secret = ClientService().rotacionar_secret(
+            client_uuid=client_uuid,
+        )
+
+        response = ClientSecretRotacionadaSerializer(
+            {
+                "id": client_uuid,
+                "secret": secret,
+            },
+        )
+
+        return Response(
+            response.data,
             status=status.HTTP_200_OK,
         )
