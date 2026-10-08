@@ -22,6 +22,32 @@ def client() -> APIClient:
 class TestUsuarioListCreateView:
     """Testes da view de consulta e criação de usuários."""
 
+    def test_options_retorna_cabecalhos_cors(
+        self,
+        client: APIClient,
+    ) -> None:
+        """Deve responder ao preflight do frontend local."""
+        response = client.options(
+            reverse("usuarios"),
+            HTTP_ORIGIN="http://localhost:3000",
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD="PATCH",
+            HTTP_ACCESS_CONTROL_REQUEST_HEADERS="Authorization, Content-Type",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers["Access-Control-Allow-Origin"] == (
+            "http://localhost:3000"
+        )
+        assert response.headers["Access-Control-Allow-Methods"] == (
+            "GET, POST, PATCH, OPTIONS"
+        )
+        assert "authorization" in response.headers[
+            "Access-Control-Allow-Headers"
+        ]
+        assert "content-type" in response.headers[
+            "Access-Control-Allow-Headers"
+        ]
+
     @patch("apps.keycloak_admin.usuarios.api.views.UsuarioService")
     def test_get_consulta_usuarios(
         self,

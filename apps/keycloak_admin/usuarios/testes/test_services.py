@@ -30,6 +30,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
             cpf="12345678900",
             rf="RF12345",
             sobrenome="Teste",
+            tipo_usuario="servidor",
         )
 
         self.assertEqual(resultado, "usuario-id")
@@ -45,6 +46,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
                 "attributes": {
                     "cpf": ["12345678900"],
                     "rf": ["RF12345"],
+                    "tipo_usuario": ["servidor"],
                 },
                 "credentials": [
                     {
@@ -66,6 +68,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
             email="usuario.teste@example.com",
             cpf="12345678900",
             rf="RF12345",
+            tipo_usuario="servidor",
         )
 
         self.assertEqual(resultado, "usuario-id")
@@ -88,6 +91,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
             email="usuario.teste@example.com",
             cpf="123.456.789-00",
             rf="",
+            tipo_usuario="servidor",
         )
 
         payload = self.admin.executar.call_args.kwargs["payload"]
@@ -107,6 +111,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
             email="usuario.teste@example.com",
             cpf="",
             rf="",
+            tipo_usuario="servidor",
         )
 
         payload = self.admin.executar.call_args.kwargs["payload"]
@@ -129,6 +134,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
             "attributes": {
                 "cpf": ["12345678900"],
                 "rf": ["RF12345"],
+                "tipo_usuario": ["servidor"],
             },
         }
 
@@ -149,6 +155,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
                     "emailVerified": True,
                     "cpf": "12345678900",
                     "rf": "RF12345",
+                    "tipo_usuario": "servidor",
                 }
             ],
         )
@@ -244,7 +251,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
 
         self.admin.executar.assert_called_once_with(
             self.admin.cliente.get_users,
-            query={"max": 50},
+            query={"max": 50, "first": 0},
         )
 
     def test_consultar_geral_com_busca(self) -> None:
@@ -262,6 +269,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
             self.admin.cliente.get_users,
             query={
                 "max": 25,
+                "first": 0,
                 "search": "Usuario Teste",
             },
         )
@@ -345,6 +353,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
             "attributes": {
                 "cpf": ["12345678900"],
                 "rf": ["RF12345"],
+                "tipo_usuario": ["servidor"],
             },
         }
 
@@ -366,6 +375,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
             {
                 "cpf": ["12345678900"],
                 "rf": ["RF12345"],
+                "tipo_usuario": ["servidor"],
             },
         )
 
@@ -626,6 +636,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
                 "emailVerified": True,
                 "cpf": "12345678900",
                 "rf": "RF12345",
+                "tipo_usuario": None,
             },
         )
 
@@ -645,6 +656,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
                 "emailVerified": False,
                 "cpf": None,
                 "rf": None,
+                "tipo_usuario": None,
             },
         )
 

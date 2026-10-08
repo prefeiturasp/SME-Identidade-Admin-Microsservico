@@ -27,6 +27,7 @@ class UsuarioCriarSerializerTest(SimpleTestCase):
             "email": "usuario.teste@example.com",
             "cpf": "12345678901",
             "rf": "RF12345",
+            "tipo_usuario": "servidor",
         }
 
     def test_deve_validar_dados_obrigatorios(self) -> None:
@@ -333,6 +334,7 @@ class UsuarioSerializerTest(SimpleTestCase):
             "emailVerified": True,
             "cpf": "12345678901",
             "rf": "RF12345",
+            "tipo_usuario": "servidor",
         }
 
     def test_deve_serializar_usuario(self) -> None:
