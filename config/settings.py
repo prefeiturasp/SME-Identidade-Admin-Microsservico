@@ -11,6 +11,8 @@ SECRET_KEY = os.getenv(
 )
 API_KEY = os.getenv("API_KEY", "dev-key-default")
 API_KEY_HEADER = os.getenv("API_KEY_HEADER", "X-API-Key")
+CLIENT_ID_HEADER = os.getenv("CLIENT_ID_HEADER", "X-Client-Id")
+CLIENT_SECRET_HEADER = os.getenv("CLIENT_SECRET_HEADER", "X-Client-Secret")
 DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
 ALLOWED_HOSTS = [
     host.strip() for host in os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
@@ -24,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
     "drf_spectacular",
     "apps.core",
@@ -34,6 +37,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -74,11 +78,35 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "apps.autenticacao.api.api_key.AutenticacaoApiKey",
+        "apps.autenticacao.api.credencials_client.AutenticacaoCredenciaisCliente",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
 }
+
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000",
+    ).split(",")
+    if origin.strip()
+]
+CORS_ALLOW_METHODS = (
+    "GET",
+    "POST",
+    "PATCH",
+    "OPTIONS",
+)
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "authorization",
+    "content-type",
+    "x-api-key",
+    "x-client-id",
+    "x-client-secret",
+)
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "SME-Identidade-Admin-Microsservico API",

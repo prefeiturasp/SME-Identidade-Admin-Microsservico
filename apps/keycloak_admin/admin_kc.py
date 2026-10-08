@@ -4,8 +4,9 @@ from collections.abc import Callable
 from typing import NoReturn
 
 from django.conf import settings
-from keycloak import KeycloakAdmin
+from keycloak import KeycloakAdmin, KeycloakOpenID
 from keycloak.exceptions import (
+    KeycloakAuthenticationError,
     KeycloakDeleteError,
     KeycloakGetError,
     KeycloakPostError,
@@ -42,6 +43,25 @@ class KeycloakAdminService:
         self.realm = realm if realm is not None else settings.KEYCLOAK_REALM
         self.cliente = self._criar_cliente()
 
+    def authenticate_client(
+        self, client_id: str, client_secret: str
+    ) -> dict | None:
+        keycloak_openid = KeycloakOpenID(
+            server_url=settings.KEYCLOAK_URL_SERVIDOR,
+            realm_name=self.realm,
+            client_id=client_id,
+            client_secret_key=client_secret,
+        )
+
+        try:
+            token = keycloak_openid.token(
+                grant_type="client_credentials",
+            )
+
+            return token
+        except Exception:
+            return None
+
     def _criar_cliente(self) -> KeycloakAdmin:
         """Cria o cliente administrativo autenticado no Keycloak.
 
@@ -62,9 +82,12 @@ class KeycloakAdminService:
             verify=settings.KEYCLOAK_VERIFICAR_SSL,
         )
 
-    def executar[
-        **P, T
-    ](self, operacao: Callable[P, T], *args: P.args, **kwargs: P.kwargs,) -> T:
+    def executar[**P, T](
+        self,
+        operacao: Callable[P, T],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> T:
         """Executa uma operação administrativa do Keycloak.
 
         Este método centraliza a execução das operações realizadas por
