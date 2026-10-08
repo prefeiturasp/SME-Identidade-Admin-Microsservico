@@ -77,6 +77,48 @@ class KeycloakAdminServiceTestCase(SimpleTestCase):
 
         self.assertIs(cliente, mock_keycloak_admin.return_value)
 
+    @patch("apps.keycloak_admin.admin_kc.KeycloakOpenID")
+    @patch("apps.keycloak_admin.admin_kc.KeycloakAdmin")
+    def test_authenticate_client_retorna_token(
+        self,
+        mock_keycloak_admin: Mock,
+        mock_keycloak_openid: Mock,
+    ) -> None:
+        """Deve retornar o token obtido com credenciais de cliente."""
+        service = KeycloakAdminService()
+        token = {"access_token": "token"}
+        mock_keycloak_openid.return_value.token.return_value = token
+
+        resultado = service.authenticate_client("client-id", "secret")
+
+        self.assertEqual(resultado, token)
+        mock_keycloak_openid.assert_called_once_with(
+            server_url=settings.KEYCLOAK_URL_SERVIDOR,
+            realm_name=service.realm,
+            client_id="client-id",
+            client_secret_key="secret",
+        )
+        mock_keycloak_openid.return_value.token.assert_called_once_with(
+            grant_type="client_credentials",
+        )
+
+    @patch("apps.keycloak_admin.admin_kc.KeycloakOpenID")
+    @patch("apps.keycloak_admin.admin_kc.KeycloakAdmin")
+    def test_authenticate_client_retorna_none_em_erro(
+        self,
+        mock_keycloak_admin: Mock,
+        mock_keycloak_openid: Mock,
+    ) -> None:
+        """Deve retornar None quando o Keycloak rejeita as credenciais."""
+        service = KeycloakAdminService()
+        mock_keycloak_openid.return_value.token.side_effect = RuntimeError(
+            "falha"
+        )
+
+        resultado = service.authenticate_client("client-id", "secret")
+
+        self.assertIsNone(resultado)
+
     @patch("apps.keycloak_admin.admin_kc.KeycloakAdmin")
     def test_executar_retorna_resultado_da_operacao(
         self,

@@ -58,6 +58,17 @@ class UsuarioServiceTestCase(SimpleTestCase):
             },
         )
 
+    def test_consultar_total_usuarios(self) -> None:
+        """Deve retornar a quantidade total de usuários."""
+        self.admin.executar.return_value = 42
+
+        resultado = self.service.consultar_total_usuarios()
+
+        self.assertEqual(resultado, 42)
+        self.admin.executar.assert_called_once_with(
+            self.admin.cliente.users_count,
+        )
+
     def test_criar_usuario_sem_sobrenome(self) -> None:
         """Deve criar usuário sem sobrenome quando não informado."""
         self.admin.executar.return_value = "usuario-id"
@@ -310,6 +321,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
             cpf="22222222222",
             rf="RF22222",
             habilitado=False,
+            tipo_usuario="gestor",
         )
 
         self.assertEqual(self.admin.executar.call_count, 2)
@@ -337,6 +349,7 @@ class UsuarioServiceTestCase(SimpleTestCase):
                 "attributes": {
                     "cpf": ["22222222222"],
                     "rf": ["RF22222"],
+                    "tipo_usuario": ["gestor"],
                 },
             },
         )
@@ -712,6 +725,19 @@ class UsuarioServiceTestCase(SimpleTestCase):
         )
 
         self.assertEqual(resultado, "12345678900")
+
+    def test_resolver_senha_com_cpf_sem_digitos(self) -> None:
+        """Deve usar o username quando o CPF não possui dígitos."""
+        resultado = UsuarioService._resolver_senha_inicial(
+            {
+                "username": "usuario.teste",
+                "attributes": {
+                    "cpf": ["somente-letras"],
+                },
+            }
+        )
+
+        self.assertEqual(resultado, "usuario.teste")
 
     def test_resolver_senha_com_username(self) -> None:
         """Deve utilizar username quando RF e CPF não estiverem disponíveis."""
