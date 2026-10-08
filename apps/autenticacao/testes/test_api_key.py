@@ -42,6 +42,15 @@ class TestAutenticacaoApiKey(SimpleTestCase):
 
         assert self.auth.authenticate(req) is None
 
+    def test_header_vazio_retorna_none(self) -> None:
+        """Verifica que um header presente, mas vazio, não autentica."""
+        settings.API_KEY = "chave-secreta"
+        settings.API_KEY_HEADER = "X-API-Key"
+
+        req = self._drf_request({"HTTP_X_API_KEY": ""})
+
+        assert self.auth.authenticate(req) is None
+
     def test_chave_correta_autentica(self) -> None:
         """Verifica que a chave correta autentica e retorna usuário."""
         settings.API_KEY = "chave-secreta"
@@ -71,7 +80,10 @@ class TestAutenticacaoApiKey(SimpleTestCase):
             },
         )
 
-        with self.assertRaises(AuthenticationFailed):
+        with self.assertRaisesRegex(
+            AuthenticationFailed,
+            "API Key inválida.",
+        ):
             self.auth.authenticate(req)
 
     def test_authenticate_header_retorna_nome_do_header(self) -> None:

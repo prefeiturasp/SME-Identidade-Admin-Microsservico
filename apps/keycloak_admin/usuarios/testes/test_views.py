@@ -22,6 +22,32 @@ def client() -> APIClient:
 class TestUsuarioListCreateView:
     """Testes da view de consulta e criação de usuários."""
 
+    def test_options_retorna_cabecalhos_cors(
+        self,
+        client: APIClient,
+    ) -> None:
+        """Deve responder ao preflight do frontend local."""
+        response = client.options(
+            reverse("usuarios"),
+            HTTP_ORIGIN="http://localhost:3000",
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD="PATCH",
+            HTTP_ACCESS_CONTROL_REQUEST_HEADERS="Authorization, Content-Type",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers["Access-Control-Allow-Origin"] == (
+            "http://localhost:3000"
+        )
+        assert response.headers["Access-Control-Allow-Methods"] == (
+            "GET, POST, PATCH, OPTIONS"
+        )
+        assert "authorization" in response.headers[
+            "Access-Control-Allow-Headers"
+        ]
+        assert "content-type" in response.headers[
+            "Access-Control-Allow-Headers"
+        ]
+
     @patch("apps.keycloak_admin.usuarios.api.views.UsuarioService")
     def test_get_consulta_usuarios(
         self,
@@ -42,28 +68,35 @@ class TestUsuarioListCreateView:
                 "rf": "RF123",
             },
         ]
+        mock_service.return_value.consultar_total_usuarios.return_value = 1
 
         response = client.get(
             reverse("usuarios"),
         )
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.json() == [
-            {
-                "id": "usuario-123",
-                "username": "usuario.teste",
-                "firstName": "Usuário",
-                "lastName": "Teste",
-                "email": "usuario@example.com",
-                "enabled": True,
-                "emailVerified": True,
-                "cpf": "12345678901",
-                "rf": "RF123",
-            },
-        ]
+        assert response.json() == {
+            "count": 1,
+            "page": 1,
+            "results": [
+                {
+                    "id": "usuario-123",
+                    "username": "usuario.teste",
+                    "firstName": "Usuário",
+                    "lastName": "Teste",
+                    "email": "usuario@example.com",
+                    "enabled": True,
+                    "emailVerified": True,
+                    "cpf": "12345678901",
+                    "rf": "RF123",
+                    "tipo_usuario": None,
+                },
+            ],
+        }
 
         mock_service.return_value.consultar.assert_called_once_with(
             limite=100,
+            page=1,
         )
 
     @patch("apps.keycloak_admin.usuarios.api.views.UsuarioService")
@@ -85,6 +118,7 @@ class TestUsuarioListCreateView:
         mock_service.return_value.consultar.assert_called_once_with(
             cpf="12345678901",
             limite=100,
+            page=1,
         )
 
     @patch("apps.keycloak_admin.usuarios.api.views.UsuarioService")
@@ -103,6 +137,7 @@ class TestUsuarioListCreateView:
             "email": "usuario@example.com",
             "cpf": "12345678901",
             "rf": "RF123",
+            "tipo_usuario": "servidor",
         }
 
         response = client.post(
