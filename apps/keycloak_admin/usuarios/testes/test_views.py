@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from django.conf import settings
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -22,6 +23,7 @@ def client() -> APIClient:
 class TestUsuarioListCreateView:
     """Testes da view de consulta e criação de usuários."""
 
+    @override_settings(CORS_ALLOWED_ORIGINS=["http://localhost:3000"])
     def test_options_retorna_cabecalhos_cors(
         self,
         client: APIClient,
