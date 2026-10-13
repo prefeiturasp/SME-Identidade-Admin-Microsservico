@@ -47,6 +47,18 @@ Clientes
 .. automodule:: apps.keycloak_admin.clientes.api.serializers
    :members:
 
+Realms
+~~~~~~
+
+.. automodule:: apps.keycloak_admin.realms.services
+   :members:
+
+.. automodule:: apps.keycloak_admin.realms.api.views
+   :members:
+
+.. automodule:: apps.keycloak_admin.realms.api.serializers
+   :members:
+
 Permissões
 ~~~~~~~~~~
 

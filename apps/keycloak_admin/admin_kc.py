@@ -1,6 +1,7 @@
 """Serviço base para administração do Keycloak."""
 
 from collections.abc import Callable
+from contextvars import ContextVar
 from typing import NoReturn
 
 from django.conf import settings
@@ -22,6 +23,13 @@ from apps.keycloak_admin.exceptions import (
     RecursoNaoEncontradoError,
 )
 
+# Realm escolhido pelo cliente da API para a requisição em curso; quando
+# vazio, as operações seguem no realm configurado.
+realm_requisicao: ContextVar[str | None] = ContextVar(
+    "realm_requisicao",
+    default=None,
+)
+
 
 class KeycloakAdminService:
     """Centraliza a comunicação administrativa com o Keycloak.
@@ -37,18 +45,24 @@ class KeycloakAdminService:
 
         Args:
             realm: Realm no qual as operações administrativas serão
-                executadas. Quando ``None``, utiliza o realm padrão
-                configurado em ``KEYCLOAK_REALM``.
+                executadas. Quando ``None``, utiliza o realm selecionado
+                para a requisição em curso e, na falta dele, o realm
+                padrão configurado em ``KEYCLOAK_REALM``.
         """
-        self.realm = realm if realm is not None else settings.KEYCLOAK_REALM
+        if realm is None:
+            realm = realm_requisicao.get() or settings.KEYCLOAK_REALM
+
+        self.realm = realm
         self.cliente = self._criar_cliente()
 
     def authenticate_client(
         self, client_id: str, client_secret: str
     ) -> dict | None:
+        # Os clients que consomem a API são cadastrados no realm
+        # configurado, qualquer que seja o realm de trabalho escolhido.
         keycloak_openid = KeycloakOpenID(
             server_url=settings.KEYCLOAK_URL_SERVIDOR,
-            realm_name=self.realm,
+            realm_name=settings.KEYCLOAK_REALM,
             client_id=client_id,
             client_secret_key=client_secret,
         )
@@ -82,12 +96,9 @@ class KeycloakAdminService:
             verify=settings.KEYCLOAK_VERIFICAR_SSL,
         )
 
-    def executar[**P, T](
-        self,
-        operacao: Callable[P, T],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> T:
+    def executar[
+        **P, T
+    ](self, operacao: Callable[P, T], *args: P.args, **kwargs: P.kwargs,) -> T:
         """Executa uma operação administrativa do Keycloak.
 
         Este método centraliza a execução das operações realizadas por
