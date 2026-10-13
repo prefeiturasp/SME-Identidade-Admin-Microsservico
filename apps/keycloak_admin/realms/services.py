@@ -175,25 +175,15 @@ class RealmService:
                 realm_name=nome,
             )
 
-            if habilitado is False and (
-                oficial or self._normalizar_realm(atual)["protegido"]
-            ):
-                raise OperacaoNaoPermitidaError(
-                    f"O realm '{nome}' não pode ser desabilitado."
-                )
+            if habilitado is False:
+                self._validar_desabilitacao(nome, atual, oficial)
 
             if altera_atributos:
-                atributos = dict(atual.get("attributes") or {})
-
-                if oficial is not None:
-                    atributos[ATRIBUTO_TOPOLOGIA_OFICIAL] = (
-                        self._formatar_booleano(oficial)
-                    )
-
-                if finalidade is not None:
-                    atributos[ATRIBUTO_FINALIDADE_TESTE] = finalidade
-
-                payload["attributes"] = atributos
+                payload["attributes"] = self._mesclar_atributos(
+                    atual,
+                    oficial,
+                    finalidade,
+                )
 
         if not payload:
             return
@@ -208,6 +198,62 @@ class RealmService:
             realm_name=nome,
             payload=payload,
         )
+
+    def _validar_desabilitacao(
+        self,
+        nome: str,
+        atual: dict[str, Any],
+        oficial: bool | None,
+    ) -> None:
+        """Impede desabilitar realm protegido ou marcado como oficial.
+
+        A marcação pedida na mesma operação também conta, para que não
+        seja possível tornar o realm oficial já desabilitado.
+
+        Args:
+            nome: Identificador do realm.
+            atual: Representação atual do realm no Keycloak.
+            oficial: Marcação de topologia oficial pedida na operação.
+
+        Raises:
+            OperacaoNaoPermitidaError: Se o realm não puder ser
+                desabilitado.
+        """
+        if oficial or self._normalizar_realm(atual)["protegido"]:
+            raise OperacaoNaoPermitidaError(
+                f"O realm '{nome}' não pode ser desabilitado."
+            )
+
+    def _mesclar_atributos(
+        self,
+        atual: dict[str, Any],
+        oficial: bool | None,
+        finalidade: str | None,
+    ) -> dict[str, Any]:
+        """Aplica a classificação sobre os atributos atuais do realm.
+
+        O mapa de atributos é enviado inteiro ao Keycloak, por isso as
+        chaves que não fazem parte da classificação são mantidas.
+
+        Args:
+            atual: Representação atual do realm no Keycloak.
+            oficial: Nova marcação de topologia oficial, se informada.
+            finalidade: Nova finalidade de teste, se informada.
+
+        Returns:
+            Atributos atualizados do realm.
+        """
+        atributos = dict(atual.get("attributes") or {})
+
+        if oficial is not None:
+            atributos[ATRIBUTO_TOPOLOGIA_OFICIAL] = self._formatar_booleano(
+                oficial
+            )
+
+        if finalidade is not None:
+            atributos[ATRIBUTO_FINALIDADE_TESTE] = finalidade
+
+        return atributos
 
     @staticmethod
     def listar_finalidades() -> list[str]:
