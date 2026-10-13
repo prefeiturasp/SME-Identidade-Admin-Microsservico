@@ -11,7 +11,10 @@ from keycloak.exceptions import (
     KeycloakPutError,
 )
 
-from apps.keycloak_admin.admin_kc import KeycloakAdminService
+from apps.keycloak_admin.admin_kc import (
+    KeycloakAdminService,
+    realm_requisicao,
+)
 from apps.keycloak_admin.exceptions import (
     ErroAutenticacaoKeycloakError,
     ErroComunicacaoKeycloakError,
@@ -65,6 +68,22 @@ class KeycloakAdminServiceTestCase(SimpleTestCase):
         )
 
     @patch("apps.keycloak_admin.admin_kc.KeycloakAdmin")
+    def test_inicializa_com_realm_da_requisicao(
+        self,
+        mock_keycloak_admin: Mock,
+    ) -> None:
+        """Deve usar o realm escolhido para a requisição em curso."""
+        token = realm_requisicao.set("sme-apps")
+        try:
+            service = KeycloakAdminService()
+            explicito = KeycloakAdminService(realm="CASARAO")
+        finally:
+            realm_requisicao.reset(token)
+
+        self.assertEqual(service.realm, "sme-apps")
+        self.assertEqual(explicito.realm, "CASARAO")
+
+    @patch("apps.keycloak_admin.admin_kc.KeycloakAdmin")
     def test_criar_cliente_retorna_cliente_keycloak(
         self,
         mock_keycloak_admin: Mock,
@@ -94,12 +113,29 @@ class KeycloakAdminServiceTestCase(SimpleTestCase):
         self.assertEqual(resultado, token)
         mock_keycloak_openid.assert_called_once_with(
             server_url=settings.KEYCLOAK_URL_SERVIDOR,
-            realm_name=service.realm,
+            realm_name=settings.KEYCLOAK_REALM,
             client_id="client-id",
             client_secret_key="secret",
         )
         mock_keycloak_openid.return_value.token.assert_called_once_with(
             grant_type="client_credentials",
+        )
+
+    @patch("apps.keycloak_admin.admin_kc.KeycloakOpenID")
+    @patch("apps.keycloak_admin.admin_kc.KeycloakAdmin")
+    def test_authenticate_client_usa_realm_configurado(
+        self,
+        mock_keycloak_admin: Mock,
+        mock_keycloak_openid: Mock,
+    ) -> None:
+        """Deve validar o client no realm configurado, não no de trabalho."""
+        service = KeycloakAdminService(realm="sme-apps")
+
+        service.authenticate_client("client-id", "secret")
+
+        self.assertEqual(
+            mock_keycloak_openid.call_args.kwargs["realm_name"],
+            settings.KEYCLOAK_REALM,
         )
 
     @patch("apps.keycloak_admin.admin_kc.KeycloakOpenID")

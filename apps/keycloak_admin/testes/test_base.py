@@ -2,10 +2,14 @@
 
 from unittest.mock import Mock, patch
 
+from django.conf import settings
 from django.test import SimpleTestCase
+from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.test import APIRequestFactory
 from rest_framework.views import APIView
 
+from apps.keycloak_admin.admin_kc import realm_requisicao
 from apps.keycloak_admin.api.base import KeycloakAdminAPIView
 from apps.keycloak_admin.exceptions import KeycloakAdminError
 
@@ -86,3 +90,54 @@ class KeycloakAdminAPIViewTestCase(SimpleTestCase):
             resposta.description,
             "Erro interno ao processar a operação.",
         )
+
+
+class _ViewRealmTeste(KeycloakAdminAPIView):
+    """View mínima que devolve o realm usado pelo serviço."""
+
+    def get(self, request: Request) -> Response:
+        """Retorna o realm resolvido pelo serviço administrativo."""
+        return Response({"realm": realm_requisicao.get()})
+
+
+class RealmDeTrabalhoTestCase(SimpleTestCase):
+    """Testa a escolha do realm de trabalho pelo header."""
+
+    def setUp(self) -> None:
+        """Prepara a fábrica de requisições autenticadas."""
+        self.factory = APIRequestFactory()
+        self.view = _ViewRealmTeste.as_view()
+
+    def _get(self, realm: str | None = None) -> Response:
+        """Executa a view com a API Key e, se informado, o realm."""
+        request = self.factory.get(
+            "/",
+            HTTP_X_API_KEY=settings.API_KEY,
+            HTTP_X_REALM=realm or "",
+        )
+        response: Response = self.view(request)
+        return response
+
+    def test_usa_realm_do_header(self) -> None:
+        """Deve expor o realm do header durante a requisição."""
+        response = self._get("sme-apps")
+
+        self.assertEqual(response.data, {"realm": "sme-apps"})
+        self.assertIsNone(realm_requisicao.get())
+
+    def test_sem_header_mantem_realm_padrao(self) -> None:
+        """Deve deixar o realm vazio, caindo no configurado."""
+        response = self._get()
+
+        self.assertEqual(response.data, {"realm": None})
+
+    def test_rejeita_realm_com_formato_invalido(self) -> None:
+        """Deve recusar valor que alteraria a URL da Admin API."""
+        response = self._get("../master")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data,
+            {"X-Realm": ["Realm informado é inválido."]},
+        )
+        self.assertIsNone(realm_requisicao.get())

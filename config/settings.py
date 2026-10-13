@@ -13,6 +13,13 @@ API_KEY = os.getenv("API_KEY", "dev-key-default")
 API_KEY_HEADER = os.getenv("API_KEY_HEADER", "X-API-Key")
 CLIENT_ID_HEADER = os.getenv("CLIENT_ID_HEADER", "X-Client-Id")
 CLIENT_SECRET_HEADER = os.getenv("CLIENT_SECRET_HEADER", "X-Client-Secret")
+REALM_HEADER = os.getenv("REALM_HEADER", "X-Realm")
+REALM_FINALIDADES_TESTE = [
+    finalidade.strip()
+    for finalidade in os.getenv("REALM_FINALIDADES_TESTE", "").split(",")
+    if finalidade.strip()
+]
+REALM_FINALIDADE_PADRAO = os.getenv("REALM_FINALIDADE_PADRAO", "Produção")
 DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
 ALLOWED_HOSTS = [
     host.strip() for host in os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
@@ -106,6 +113,7 @@ CORS_ALLOW_HEADERS = (
     "x-api-key",
     "x-client-id",
     "x-client-secret",
+    REALM_HEADER.lower(),
 )
 
 SPECTACULAR_SETTINGS = {

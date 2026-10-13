@@ -48,4 +48,8 @@ urlpatterns = [
         f"{API_PREFIX}",
         include("apps.keycloak_admin.sessoes.api.urls"),
     ),
+    path(
+        f"{API_PREFIX}",
+        include("apps.keycloak_admin.realms.api.urls"),
+    ),
 ]
