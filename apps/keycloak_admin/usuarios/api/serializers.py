@@ -33,6 +33,10 @@ class UsuarioCriarSerializer(serializers.Serializer):
         max_length=50,
         help_text="Registro funcional do usuário.",
     )
+    tipo_usuario = serializers.CharField(
+        max_length=50,
+        help_text="Tipo do usuário, utilizado para fins de auditoria.",
+    )
 
 
 class UsuarioConsultaSerializer(serializers.Serializer):
@@ -84,7 +88,17 @@ class UsuarioConsultaSerializer(serializers.Serializer):
         max_value=1000,
         default=100,
         help_text=(
-            "Quantidade máxima de usuários retornados. " "Valor padrão: 100."
+            "Quantidade máxima de usuários retornados. Valor padrão: 100."
+        ),
+    )
+
+    page = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        default=1,
+        help_text=(
+            "Número da página de resultados a ser retornada. "
+            "Valor padrão: 1."
         ),
     )
 
@@ -178,6 +192,11 @@ class UsuarioAtualizarSerializer(serializers.Serializer):
         required=False,
         help_text="Define se o usuário permanecerá habilitado no Keycloak.",
     )
+    tipo_usuario = serializers.CharField(
+        max_length=50,
+        required=False,
+        help_text="Novo tipo do usuário, utilizado para fins de auditoria.",
+    )
 
 
 class UsuarioAlterarEmailSerializer(serializers.Serializer):
@@ -209,6 +228,15 @@ class UsuarioSerializer(serializers.Serializer):
     emailVerified = serializers.BooleanField()
     cpf = serializers.CharField(allow_null=True)
     rf = serializers.CharField(allow_null=True)
+    tipo_usuario = serializers.CharField(allow_null=True)
+
+
+class ListaUsuariosSerializer(serializers.Serializer):
+    """Representa os dados de uma lista de usuários retornados pela API."""
+
+    count = serializers.IntegerField()
+    page = serializers.IntegerField()
+    results = UsuarioSerializer(many=True)
 
 
 class UsuarioCriadoSerializer(serializers.Serializer):

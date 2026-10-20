@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from apps.keycloak_admin.api.base import KeycloakAdminAPIView
 from apps.keycloak_admin.usuarios.api.serializers import (
+    ListaUsuariosSerializer,
     UsuarioAlterarEmailSerializer,
     UsuarioAlterarSenhaSerializer,
     UsuarioAtualizarSerializer,
@@ -49,6 +50,7 @@ class UsuarioListCreateView(KeycloakAdminAPIView):
             "- Quando nenhum identificador ou `busca` for informado, "
             "a consulta retorna a lista de usuários.\n"
             "- `limite` é opcional e possui padrão de 100 registros."
+            "- `page` é opcional e possui padrão de 1."
         ),
         parameters=[UsuarioConsultaSerializer],
         responses={
@@ -74,9 +76,14 @@ class UsuarioListCreateView(KeycloakAdminAPIView):
             **serializer.validated_data,
         )
 
-        response = UsuarioSerializer(
-            usuarios,
-            many=True,
+        total_usuarios = UsuarioService().consultar_total_usuarios()
+
+        response = ListaUsuariosSerializer(
+            {
+                "count": total_usuarios,
+                "results": usuarios,
+                "page": serializer.validated_data.get("page", 1),
+            },
         )
 
         return Response(

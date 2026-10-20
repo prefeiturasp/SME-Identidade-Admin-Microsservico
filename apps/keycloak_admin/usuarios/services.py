@@ -26,6 +26,18 @@ class UsuarioService:
         """
         self.admin = admin or KeycloakAdminService()
 
+    def consultar_total_usuarios(self):
+        """Consulta a quantidade total de usuários no realm.
+
+        Returns:
+            Quantidade total de usuários cadastrados no Keycloak.
+        """
+        total = self.admin.executar(
+            self.admin.cliente.users_count,
+        )
+
+        return total
+
     def criar(
         self,
         usuario: str,
@@ -33,6 +45,7 @@ class UsuarioService:
         email: str,
         cpf: str,
         rf: str,
+        tipo_usuario: str,
         sobrenome: str | None = None,
     ) -> str:
         """Cria um usuário no Keycloak.
@@ -49,6 +62,7 @@ class UsuarioService:
             cpf: CPF do usuário.
             rf: Registro funcional do usuário.
             sobrenome: Sobrenome do usuário.
+            tipo_usuario: Tipo do usuário, utilizado para fins de auditoria.
 
         Returns:
             ID do usuário criado no Keycloak.
@@ -62,6 +76,7 @@ class UsuarioService:
             "attributes": {
                 "cpf": [cpf],
                 "rf": [rf],
+                "tipo_usuario": [tipo_usuario],
             },
         }
 
@@ -96,6 +111,7 @@ class UsuarioService:
         email: str | None = None,
         busca: str | None = None,
         limite: int = 100,
+        page: int = 1,
     ) -> list[dict[str, Any]]:
         """Consulta usuários do realm.
 
@@ -161,6 +177,7 @@ class UsuarioService:
         else:
             parametros: dict[str, Any] = {
                 "max": limite,
+                "first": (page - 1) * limite,
             }
 
             if busca:
@@ -182,6 +199,7 @@ class UsuarioService:
         cpf: str | None = None,
         rf: str | None = None,
         habilitado: bool | None = None,
+        tipo_usuario: str | None = None,
     ) -> None:
         """Atualiza os dados cadastrais de um usuário.
 
@@ -198,6 +216,7 @@ class UsuarioService:
             cpf: Novo CPF.
             rf: Novo registro funcional.
             habilitado: Define se o usuário deve permanecer habilitado.
+            tipo_usuario: tipo do usuário, utilizado para fins de auditoria.
         """
         usuario_atual = self.admin.executar(
             self.admin.cliente.get_user,
@@ -231,6 +250,9 @@ class UsuarioService:
 
         if rf is not None:
             atributos["rf"] = [rf]
+
+        if tipo_usuario is not None:
+            atributos["tipo_usuario"] = [tipo_usuario]
 
         if habilitado is not None:
             payload["enabled"] = habilitado
@@ -612,6 +634,10 @@ class UsuarioService:
             "rf": UsuarioService._obter_atributo(
                 atributos,
                 "rf",
+            ),
+            "tipo_usuario": UsuarioService._obter_atributo(
+                atributos,
+                "tipo_usuario",
             ),
         }
 
